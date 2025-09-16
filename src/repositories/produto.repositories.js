@@ -24,7 +24,7 @@ async function execute(sql, binds = [], options = {}) {
 }
 
 const createProduto = async (produtoData) => {
-    // A inserção não precisa de alteração
+  
     const sql = `INSERT INTO produto (nome, preco, categoria, descricao, ativo) VALUES (:nome, :preco, :categoria, :descricao, :ativo) RETURNING id INTO :id`;
     const binds = {
         ...produtoData,
@@ -37,11 +37,10 @@ const createProduto = async (produtoData) => {
 };
 
 const findAllProdutos = async () => {
-    // 🔑 AQUI ESTÁ A CORREÇÃO: Usamos TO_CHAR() na coluna DESCRICAO
+    
     const sql = `SELECT ID, NOME, PRECO, CATEGORIA, TO_CHAR(DESCRICAO) AS DESCRICAO, ATIVO FROM produto`;
     const result = await execute(sql);
 
-    // O mapeamento continua sendo uma boa prática
     return result.rows.map(row => ({
         id: row.ID,
         nome: row.NOME,
@@ -53,7 +52,6 @@ const findAllProdutos = async () => {
 };
 
 const findProdutoById = async (id) => {
-    // 🔑 AQUI ESTÁ A CORREÇÃO: Usamos TO_CHAR() na coluna DESCRICAO também
     const sql = `SELECT ID, NOME, PRECO, CATEGORIA, TO_CHAR(DESCRICAO) AS DESCRICAO, ATIVO FROM produto WHERE id = :id`;
     const result = await execute(sql, [id]);
 
