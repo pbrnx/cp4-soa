@@ -54,10 +54,33 @@ const deleteProduto = async (req, res) => {
     }
 };
 
+// Adicione esta nova função
+const getAllProdutosAdmin = async (req, res) => {
+    try {
+        const produtos = await produtoService.getAllProdutosAdmin();
+        res.status(200).json(produtos);
+    } catch (error) {
+        console.error("Erro em getAllProdutosAdmin:", error);
+        res.status(500).json({ message: "Erro ao buscar produtos para admin" });
+    }
+};
+
+// E esta também
+const reactivateProduto = async (req, res) => {
+    try {
+        await produtoService.reactivateProduto(req.params.id);
+        res.status(204).send();
+    } catch (error) {
+        console.error("Erro em reactivateProduto:", error);
+        res.status(404).json({ message: error.message });
+    }
+};
 module.exports = {
     createProduto,
     getAllProdutos,
     getProdutoById,
     updateProduto,
-    deleteProduto
+    deleteProduto,
+    getAllProdutosAdmin,
+    reactivateProduto
 };

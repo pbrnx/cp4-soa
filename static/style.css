@@ -5,10 +5,10 @@
 /* =============================================== */
 :root {
     --cor-primaria: #0d6efd; /* Azul do Bootstrap */
-    --cor-destaque: #ffc107; /* Amarelo/Dourado */
+    --cor-secundaria: #6c757d; /* Cinza */
+    --cor-sucesso: #198754; /* Verde */
     --cor-fundo: #f8f9fa;
     --cor-texto: #212529;
-    --cor-dark: #212529;
     --sombra-suave: 0 4px 15px rgba(0, 0, 0, 0.08);
     --borda-radius: 0.5rem;
 }
@@ -25,6 +25,7 @@ body {
 main {
     flex-grow: 1; /* Faz o conteúdo principal crescer e empurrar o rodapé para baixo */
 }
+
 
 /* =============================================== */
 /* ESTILOS DO HEADER (BARRA DE NAVEGAÇÃO)          */
@@ -74,7 +75,7 @@ main {
 
 .card-title {
     font-weight: 600;
-    color: var(--cor-dark);
+    color: var(--cor-texto);
 }
 
 .card-price {
@@ -122,6 +123,7 @@ main {
     font-size: 0.8rem;
 }
 
+
 /* =============================================== */
 /* MENSAGENS E LOADERS (para o JS usar depois)     */
 /* =============================================== */
@@ -134,4 +136,24 @@ main {
 .spinner-border {
     width: 3rem;
     height: 3rem;
+}
+
+/* =============================================== */
+/* ESTILOS PARA PÁGINAS DE AUTH (LOGIN/CADASTRO)   */
+/* =============================================== */
+.container-login, .container-cadastro {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem 1rem;
+    min-height: calc(100vh - 56px); /* 56px é a altura da navbar */
+}
+
+.card-login, .card-cadastro {
+    width: 100%;
+    max-width: 400px; /* Largura máxima para o card de login */
+}
+
+.card-cadastro {
+    max-width: 450px; /* Um pouco mais largo para o cadastro */
 }

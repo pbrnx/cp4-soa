@@ -35,10 +35,26 @@ const deleteProduto = async (id) => {
     return await produtoRepository.deleteProduto(id);
 };
 
+// Adicione esta nova função ao arquivo
+const getAllProdutosAdmin = async () => {
+    return await produtoRepository.findAllProductsAdmin();
+};
+
+// Adicione também esta função de reativação
+const reactivateProduto = async (id) => {
+    const produtoExistente = await produtoRepository.findProdutoById(id);
+    if (!produtoExistente) {
+        throw new Error("Produto não encontrado para reativação.");
+    }
+    return await produtoRepository.reactivateProduto(id);
+};
+
 module.exports = {
     createProduto,
     getAllProdutos,
     getProdutoById,
     updateProduto,
-    deleteProduto
+    deleteProduto,
+    getAllProdutosAdmin,
+    reactivateProduto
 };

@@ -16,14 +16,21 @@
     <header>
         <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
             <div class="container">
-                <a class="navbar-brand" href="#">
+                <a class="navbar-brand" href="index.html">
                     <i class="bi bi-gem"></i>
                     <strong>QualityStore</strong>
                 </a>
-                <button class="btn btn-light" id="cart-button">
-                    <i class="bi bi-cart-fill"></i> Carrinho
-                    <span class="badge bg-danger rounded-pill" id="cart-count">0</span>
-                </button>
+                
+                <div>
+                    <button class="btn btn-light" id="cart-button">
+                        <i class="bi bi-cart-fill"></i> Carrinho
+                        <span class="badge bg-danger rounded-pill" id="cart-count">0</span>
+                    </button>
+                    <a href="login.html" class="btn btn-primary" id="login-button">
+                        <i class="bi bi-box-arrow-in-right"></i> Login
+                    </a>
+                    <div id="user-session" class="d-inline-block"></div>
+                </div>
             </div>
         </nav>
     </header>
@@ -43,8 +50,7 @@
         </section>
 
         <section id="cart-view" class="d-none">
-            <div id="cart-items-container">
-                </div>
+            <div id="cart-items-container"></div>
             <hr>
             <div class="text-end">
                 <h3>Total: <span id="cart-total">R$ 0,00</span></h3>

@@ -33,5 +33,3 @@ module.exports = {
     getPedidoById
 };
 
-// NOTA: Para o código acima funcionar, o `carrinho.services.js` precisará de uma nova função
-// `getCarrinhoById` que busca um carrinho e seu cliente_id pelo ID do carrinho.

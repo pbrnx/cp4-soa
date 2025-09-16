@@ -2,11 +2,7 @@
 
 const oracledb = require('oracledb');
 
-// =================================================================
-// 🔑 CORREÇÃO DEFINITIVA: Define o formato de saída globalmente
-// Isso força o driver a sempre retornar objetos JS puros em vez de NVPair.
 oracledb.outFormat = oracledb.OUT_FORMAT_OBJECT;
-// =================================================================
 
 // Configurações de conexão com o Oracle Database
 const dbConfig = {

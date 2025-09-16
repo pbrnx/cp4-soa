@@ -38,7 +38,7 @@ const createProduto = async (produtoData) => {
 
 const findAllProdutos = async () => {
     
-    const sql = `SELECT ID, NOME, PRECO, CATEGORIA, TO_CHAR(DESCRICAO) AS DESCRICAO, ATIVO FROM produto`;
+    const sql = `SELECT ID, NOME, PRECO, CATEGORIA, TO_CHAR(DESCRICAO) AS DESCRICAO, ATIVO FROM produto WHERE ATIVO=1`;
     const result = await execute(sql);
 
     return result.rows.map(row => ({
@@ -84,7 +84,30 @@ const updateProduto = async (id, produtoData) => {
 };
 
 const deleteProduto = async (id) => {
-    const sql = `DELETE FROM produto WHERE id = :id`;
+    // Em vez de deletar, marcamos como inativo (ATIVO = 0)
+    const sql = `UPDATE produto SET ativo = 0 WHERE id = :id`;
+    await execute(sql, [id]);
+};
+
+// Adicione esta nova função ao arquivo
+const findAllProductsAdmin = async () => {
+    // Esta query busca TODOS os produtos, sem filtrar por 'ativo'
+    const sql = `SELECT ID, NOME, PRECO, CATEGORIA, TO_CHAR(DESCRICAO) AS DESCRICAO, ATIVO FROM produto ORDER BY ID DESC`;
+    const result = await execute(sql);
+
+    return result.rows.map(row => ({
+        id: row.ID,
+        nome: row.NOME,
+        preco: row.PRECO,
+        categoria: row.CATEGORIA,
+        descricao: row.DESCRICAO,
+        ativo: !!row.ATIVO
+    }));
+};
+
+// Adicione também esta função para reativar
+const reactivateProduto = async (id) => {
+    const sql = `UPDATE produto SET ativo = 1 WHERE id = :id`;
     await execute(sql, [id]);
 };
 
@@ -93,5 +116,7 @@ module.exports = {
     findAllProdutos,
     findProdutoById,
     updateProduto,
-    deleteProduto
+    deleteProduto,
+    findAllProductsAdmin,
+    reactivateProduto
 };
