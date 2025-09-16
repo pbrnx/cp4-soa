@@ -14,38 +14,43 @@ async function execute(sql, binds = [], options = {}) {
         throw err;
     } finally {
         if (connection) {
-            try {
-                await connection.close();
-            } catch (err) {
-                console.error(err);
-            }
+            try { await connection.close(); } catch (err) { console.error(err); }
         }
     }
 }
 
 const createCliente = async (clienteData) => {
     const sql = `INSERT INTO cliente (nome, email, documento) VALUES (:nome, :email, :documento) RETURNING id INTO :id`;
-    const binds = {
-        ...clienteData,
-        id: { dir: oracledb.BIND_OUT, type: oracledb.NUMBER }
-    };
+    const binds = { ...clienteData, id: { dir: oracledb.BIND_OUT, type: oracledb.NUMBER } };
     const result = await execute(sql, binds);
     const id = result.outBinds.id[0];
     return new Cliente(id, clienteData.nome, clienteData.email, clienteData.documento);
 };
 
 const findAllClientes = async () => {
-    const sql = `SELECT * FROM cliente`;
+    const sql = `SELECT ID, NOME, EMAIL, DOCUMENTO FROM cliente`;
     const result = await execute(sql);
-    return result.rows.map(row => new Cliente(row.ID, row.NOME, row.EMAIL, row.DOCUMENTO));
+    // SOLUÇÃO: Criar manualmente objetos puros.
+    return result.rows.map(row => ({
+        id: row.ID,
+        nome: row.NOME,
+        email: row.EMAIL,
+        documento: row.DOCUMENTO
+    }));
 };
 
 const findClienteById = async (id) => {
-    const sql = `SELECT * FROM cliente WHERE id = :id`;
+    const sql = `SELECT ID, NOME, EMAIL, DOCUMENTO FROM cliente WHERE id = :id`;
     const result = await execute(sql, [id]);
     if (result.rows.length === 0) return null;
     const row = result.rows[0];
-    return new Cliente(row.ID, row.NOME, row.EMAIL, row.DOCUMENTO);
+    // SOLUÇÃO: Criar manualmente um objeto puro.
+    return {
+        id: row.ID,
+        nome: row.NOME,
+        email: row.EMAIL,
+        documento: row.DOCUMENTO
+    };
 };
 
 const updateCliente = async (id, clienteData) => {

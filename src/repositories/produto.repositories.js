@@ -7,18 +7,19 @@ async function execute(sql, binds = [], options = {}) {
     let connection;
     try {
         connection = await oracledb.getConnection(dbConfig);
-        const result = await connection.execute(sql, binds, { ...options, autoCommit: true, outFormat: oracledb.OUT_FORMAT_OBJECT });
+        // 🔑 CORREÇÃO: Define OUT_FORMAT_OBJECT como padrão para evitar NVPair
+        const result = await connection.execute(sql, binds, { 
+            outFormat: oracledb.OUT_FORMAT_OBJECT,
+            autoCommit: true,
+            ...options
+        });
         return result;
     } catch (err) {
         console.error(err);
         throw err;
     } finally {
         if (connection) {
-            try {
-                await connection.close();
-            } catch (err) {
-                console.error(err);
-            }
+            try { await connection.close(); } catch (err) { console.error(err); }
         }
     }
 }
@@ -36,28 +37,55 @@ const createProduto = async (produtoData) => {
 };
 
 const findAllProdutos = async () => {
-    const sql = `SELECT * FROM produto`;
+    const sql = `SELECT ID, NOME, PRECO, CATEGORIA, DESCRICAO, ATIVO FROM produto`;
     const result = await execute(sql);
-    return result.rows.map(row => new Produto(row.ID, row.NOME, row.PRECO, row.CATEGORIA, row.DESCRICAO, !!row.ATIVO));
+    
+    // Mapeia para objetos JSON limpos
+    return result.rows.map(row => ({
+        id: row.ID,
+        nome: row.NOME,
+        preco: row.PRECO,
+        categoria: row.CATEGORIA,
+        descricao: row.DESCRICAO,
+        ativo: !!row.ATIVO
+    }));
 };
 
 const findProdutoById = async (id) => {
-    const sql = `SELECT * FROM produto WHERE id = :id`;
+    const sql = `SELECT ID, NOME, PRECO, CATEGORIA, DESCRICAO, ATIVO FROM produto WHERE id = :id`;
     const result = await execute(sql, [id]);
+    
     if (result.rows.length === 0) return null;
+    
     const row = result.rows[0];
-    return new Produto(row.ID, row.NOME, row.PRECO, row.CATEGORIA, row.DESCRICAO, !!row.ATIVO);
+    return {
+        id: row.ID,
+        nome: row.NOME,
+        preco: row.PRECO,
+        categoria: row.CATEGORIA,
+        descricao: row.DESCRICAO,
+        ativo: !!row.ATIVO
+    };
 };
 
 const updateProduto = async (id, produtoData) => {
     const sql = `UPDATE produto SET nome = :nome, preco = :preco, categoria = :categoria, descricao = :descricao, ativo = :ativo WHERE id = :id`;
-    const binds = {
-        ...produtoData,
-        id,
-        ativo: produtoData.ativo ? 1 : 0
+    const binds = { 
+        ...produtoData, 
+        id, 
+        ativo: produtoData.ativo ? 1 : 0 
     };
     await execute(sql, binds);
-    return new Produto(id, produtoData.nome, produtoData.preco, produtoData.categoria, produtoData.descricao, produtoData.ativo);
+    
+    // Retorna objeto JSON limpo
+    return {
+        id: id,
+        nome: produtoData.nome,
+        preco: produtoData.preco,
+        categoria: produtoData.categoria,
+        descricao: produtoData.descricao,
+        ativo: produtoData.ativo
+    };
 };
 
 const deleteProduto = async (id) => {

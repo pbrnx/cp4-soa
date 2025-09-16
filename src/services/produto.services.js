@@ -2,25 +2,18 @@
 const produtoRepository = require('../repositories/produto.repositories');
 
 const createProduto = async (produtoData) => {
-    // Regra de negócio: O preço de um produto não pode ser negativo.
     if (produtoData.preco < 0) {
         throw new Error("O preço do produto não pode ser negativo.");
     }
-    const novoProduto = await produtoRepository.createProduto(produtoData);
-    // Garante que o retorno seja um objeto simples
-    return JSON.parse(JSON.stringify(novoProduto));
+    return await produtoRepository.createProduto(produtoData);
 };
 
 const getAllProdutos = async () => {
-    const produtos = await produtoRepository.findAllProdutos();
-    // Garante que o retorno seja um array de objetos simples
-    return JSON.parse(JSON.stringify(produtos));
+    return await produtoRepository.findAllProdutos();
 };
 
 const getProdutoById = async (id) => {
-    const produto = await produtoRepository.findProdutoById(id);
-    // Garante que o retorno seja um objeto simples
-    return JSON.parse(JSON.stringify(produto));
+    return await produtoRepository.findProdutoById(id);
 };
 
 const updateProduto = async (id, produtoData) => {
@@ -31,9 +24,7 @@ const updateProduto = async (id, produtoData) => {
     if (produtoData.preco < 0) {
         throw new Error("O preço do produto não pode ser negativo.");
     }
-    const produtoAtualizado = await produtoRepository.updateProduto(id, produtoData);
-    // Garante que o retorno seja um objeto simples
-    return JSON.parse(JSON.stringify(produtoAtualizado));
+    return await produtoRepository.updateProduto(id, produtoData);
 };
 
 const deleteProduto = async (id) => {
