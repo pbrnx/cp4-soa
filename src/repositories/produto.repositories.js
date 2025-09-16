@@ -7,9 +7,8 @@ async function execute(sql, binds = [], options = {}) {
     let connection;
     try {
         connection = await oracledb.getConnection(dbConfig);
-        // 🔑 CORREÇÃO: Define OUT_FORMAT_OBJECT como padrão para evitar NVPair
-        const result = await connection.execute(sql, binds, { 
-            outFormat: oracledb.OUT_FORMAT_OBJECT,
+        const result = await connection.execute(sql, binds, {
+            outFormat: oracledb.OUT_FORMAT_OBJECT, // É bom manter por padrão
             autoCommit: true,
             ...options
         });
@@ -25,6 +24,7 @@ async function execute(sql, binds = [], options = {}) {
 }
 
 const createProduto = async (produtoData) => {
+    // A inserção não precisa de alteração
     const sql = `INSERT INTO produto (nome, preco, categoria, descricao, ativo) VALUES (:nome, :preco, :categoria, :descricao, :ativo) RETURNING id INTO :id`;
     const binds = {
         ...produtoData,
@@ -37,54 +37,51 @@ const createProduto = async (produtoData) => {
 };
 
 const findAllProdutos = async () => {
-    const sql = `SELECT ID, NOME, PRECO, CATEGORIA, DESCRICAO, ATIVO FROM produto`;
+    // 🔑 AQUI ESTÁ A CORREÇÃO: Usamos TO_CHAR() na coluna DESCRICAO
+    const sql = `SELECT ID, NOME, PRECO, CATEGORIA, TO_CHAR(DESCRICAO) AS DESCRICAO, ATIVO FROM produto`;
     const result = await execute(sql);
-    
-    // Mapeia para objetos JSON limpos
+
+    // O mapeamento continua sendo uma boa prática
     return result.rows.map(row => ({
         id: row.ID,
         nome: row.NOME,
         preco: row.PRECO,
         categoria: row.CATEGORIA,
-        descricao: row.DESCRICAO,
+        descricao: row.DESCRICAO, // Agora DESCRICAO já é uma string
         ativo: !!row.ATIVO
     }));
 };
 
 const findProdutoById = async (id) => {
-    const sql = `SELECT ID, NOME, PRECO, CATEGORIA, DESCRICAO, ATIVO FROM produto WHERE id = :id`;
+    // 🔑 AQUI ESTÁ A CORREÇÃO: Usamos TO_CHAR() na coluna DESCRICAO também
+    const sql = `SELECT ID, NOME, PRECO, CATEGORIA, TO_CHAR(DESCRICAO) AS DESCRICAO, ATIVO FROM produto WHERE id = :id`;
     const result = await execute(sql, [id]);
-    
+
     if (result.rows.length === 0) return null;
-    
+
     const row = result.rows[0];
     return {
         id: row.ID,
         nome: row.NOME,
         preco: row.PRECO,
         categoria: row.CATEGORIA,
-        descricao: row.DESCRICAO,
+        descricao: row.DESCRICAO, // Agora DESCRICAO já é uma string
         ativo: !!row.ATIVO
     };
 };
 
 const updateProduto = async (id, produtoData) => {
     const sql = `UPDATE produto SET nome = :nome, preco = :preco, categoria = :categoria, descricao = :descricao, ativo = :ativo WHERE id = :id`;
-    const binds = { 
-        ...produtoData, 
-        id, 
-        ativo: produtoData.ativo ? 1 : 0 
+    const binds = {
+        ...produtoData,
+        id,
+        ativo: produtoData.ativo ? 1 : 0
     };
     await execute(sql, binds);
-    
-    // Retorna objeto JSON limpo
+
     return {
-        id: id,
-        nome: produtoData.nome,
-        preco: produtoData.preco,
-        categoria: produtoData.categoria,
-        descricao: produtoData.descricao,
-        ativo: produtoData.ativo
+        id: parseInt(id, 10),
+        ...produtoData
     };
 };
 
