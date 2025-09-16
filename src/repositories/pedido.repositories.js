@@ -3,26 +3,38 @@ const oracledb = require('oracledb');
 const { dbConfig } = require('../config/database');
 const { Pedido, ItemPedido } = require('../models/pedido.model');
 
-// Função transacional
+// =================================================================
+// FUNÇÃO CORRIGIDA
+// =================================================================
 async function executeInTransaction(actions) {
     let connection;
     try {
         connection = await oracledb.getConnection(dbConfig);
-        await connection.beginTransaction();
+        // A transação começa implicitamente na primeira execução de DML.
+        // Não é necessário chamar beginTransaction().
         const results = await actions(connection);
-        await connection.commit();
+        await connection.commit(); // Confirma a transação se tudo deu certo
         return results;
     } catch (err) {
         if (connection) {
-            try { await connection.rollback(); } catch (rollErr) { console.error(rollErr); }
+            try { 
+                await connection.rollback(); // Desfaz a transação em caso de erro
+            } catch (rollErr) { 
+                console.error(rollErr); 
+            }
         }
         throw err;
     } finally {
         if (connection) {
-            try { await connection.close(); } catch (err) { console.error(err); }
+            try { 
+                await connection.close(); 
+            } catch (err) { 
+                console.error(err); 
+            }
         }
     }
 }
+// =================================================================
 
 const createPedidoFromCarrinho = async (carrinho) => {
     return executeInTransaction(async (connection) => {
@@ -35,6 +47,7 @@ const createPedidoFromCarrinho = async (carrinho) => {
             status: 'CRIADO',
             id: { dir: oracledb.BIND_OUT, type: oracledb.NUMBER }
         };
+        // As opções { autoCommit: false } são o padrão, mas é bom ser explícito dentro de uma transação.
         const pedidoResult = await connection.execute(createPedidoSql, pedidoBind, { outFormat: oracledb.OUT_FORMAT_OBJECT });
         const pedido_id = pedidoResult.outBinds.id[0];
 

@@ -14,6 +14,9 @@ const app = express();
 // Middleware para permitir que o Express entenda JSON no corpo das requisições
 app.use(express.json());
 
+//servir rota html
+app.use(express.static('static'));
+
 // Rota raiz para teste
 app.get('/', (req, res) => {
     res.send('API de E-commerce está no ar!');

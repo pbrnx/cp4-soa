@@ -10,6 +10,7 @@ const createPedido = async (req, res) => {
         const novoPedido = await pedidoService.createPedido(carrinhoId);
         res.status(201).json(novoPedido);
     } catch (error) {
+        console.error("Erro em createPedido:", error);
         res.status(400).json({ message: error.message });
     }
 };
@@ -19,6 +20,7 @@ const getAllPedidos = async (req, res) => {
         const pedidos = await pedidoService.getAllPedidos();
         res.status(200).json(pedidos);
     } catch (error) {
+        console.error("Erro em getAllPedidos:", error);
         res.status(500).json({ message: "Erro ao buscar pedidos" });
     }
 };
@@ -31,6 +33,7 @@ const getPedidoById = async (req, res) => {
         }
         res.status(200).json(pedido);
     } catch (error) {
+        console.error("Erro em getPedidoById:", error);
         res.status(500).json({ message: "Erro ao buscar pedido" });
     }
 };

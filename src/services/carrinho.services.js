@@ -22,6 +22,22 @@ const getCarrinhoByClienteId = async (clienteId) => {
     return carrinho;
 };
 
+
+const getCarrinhoById = async (carrinhoId) => {
+    // Esta função auxiliar já existe no arquivo, vamos usá-la.
+    const carrinhoInfo = await findCarrinhoById(carrinhoId); 
+    if (!carrinhoInfo) {
+        throw new Error("Carrinho não encontrado.");
+    }
+    
+    const carrinho = new Carrinho(carrinhoInfo.id, carrinhoInfo.cliente_id);
+    const itens = await carrinhoRepository.getItensByCarrinhoId(carrinhoId);
+    itens.forEach(item => carrinho.adicionarItem(item));
+
+    return carrinho;
+}
+// =================================================================
+
 const addItem = async (carrinhoId, itemData) => {
     const produto = await produtoRepository.findProdutoById(itemData.produto_id);
     if (!produto) {
@@ -37,8 +53,7 @@ const addItem = async (carrinhoId, itemData) => {
     await carrinhoRepository.addItemAoCarrinho(carrinhoId, itemData, produto.preco);
 
     // Retorna o carrinho atualizado
-    const carrinho = await getCarrinhoByClienteId((await findCarrinhoById(carrinhoId)).cliente_id); // precisa de uma função para achar o cliente id pelo carrinho id
-    return carrinho;
+    return getCarrinhoById(carrinhoId);
 };
 
 const removeItem = async (itemId) => {
@@ -58,9 +73,10 @@ async function findCarrinhoById(carrinhoId) {
     return { id: result.rows[0].ID, cliente_id: result.rows[0].CLIENTE_ID };
 }
 
-
+// ATUALIZE A LINHA DE EXPORTAÇÃO
 module.exports = {
     getCarrinhoByClienteId,
     addItem,
-    removeItem
-};  
+    removeItem,
+    getCarrinhoById // << Adicione a nova função aqui
+};

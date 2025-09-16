@@ -6,6 +6,7 @@ const createProduto = async (req, res) => {
         const novoProduto = await produtoService.createProduto(req.body);
         res.status(201).json(novoProduto);
     } catch (error) {
+        console.error("Erro em createProduto:", error);
         res.status(400).json({ message: error.message });
     }
 };
@@ -15,6 +16,7 @@ const getAllProdutos = async (req, res) => {
         const produtos = await produtoService.getAllProdutos();
         res.status(200).json(produtos);
     } catch (error) {
+        console.error("Erro em getAllProdutos:", error);
         res.status(500).json({ message: "Erro ao buscar produtos" });
     }
 };
@@ -27,6 +29,7 @@ const getProdutoById = async (req, res) => {
         }
         res.status(200).json(produto);
     } catch (error) {
+        console.error("Erro em getProdutoById:", error);
         res.status(500).json({ message: "Erro ao buscar produto" });
     }
 };
@@ -36,6 +39,7 @@ const updateProduto = async (req, res) => {
         const produtoAtualizado = await produtoService.updateProduto(req.params.id, req.body);
         res.status(200).json(produtoAtualizado);
     } catch (error) {
+        console.error("Erro em updateProduto:", error);
         res.status(404).json({ message: error.message });
     }
 };
@@ -45,6 +49,7 @@ const deleteProduto = async (req, res) => {
         await produtoService.deleteProduto(req.params.id);
         res.status(204).send();
     } catch (error) {
+        console.error("Erro em deleteProduto:", error);
         res.status(404).json({ message: error.message });
     }
 };

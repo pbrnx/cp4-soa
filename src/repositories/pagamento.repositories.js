@@ -3,25 +3,37 @@ const oracledb = require('oracledb');
 const { dbConfig } = require('../config/database');
 const Pagamento = require('../models/pagamento.model');
 
+// =================================================================
+// FUNÇÃO CORRIGIDA
+// =================================================================
 async function executeInTransaction(actions) {
     let connection;
     try {
         connection = await oracledb.getConnection(dbConfig);
-        await connection.beginTransaction();
+        // A transação começa implicitamente na primeira execução de DML.
         const results = await actions(connection);
-        await connection.commit();
+        await connection.commit(); // Confirma a transação
         return results;
     } catch (err) {
         if (connection) {
-            try { await connection.rollback(); } catch (rollErr) { console.error(rollErr); }
+            try { 
+                await connection.rollback(); // Desfaz em caso de erro
+            } catch (rollErr) { 
+                console.error(rollErr); 
+            }
         }
         throw err;
     } finally {
         if (connection) {
-            try { await connection.close(); } catch (err) { console.error(err); }
+            try { 
+                await connection.close(); 
+            } catch (err) { 
+                console.error(err); 
+            }
         }
     }
 }
+// =================================================================
 
 const createPagamento = async (pagamentoData, valorPedido) => {
     return executeInTransaction(async (connection) => {

@@ -7,6 +7,7 @@ const createPagamento = async (req, res) => {
         const novoPagamento = await pagamentoService.createPagamento(req.body);
         res.status(201).json(novoPagamento);
     } catch (error) {
+        console.error("Erro em createPagamento:", error);
         res.status(400).json({ message: error.message });
     }
 };
@@ -20,6 +21,7 @@ const getPagamentoByPedidoId = async (req, res) => {
         }
         res.status(200).json(pagamento);
     } catch (error) {
+        console.error("Erro em getPagamentoByPedidoId:", error);
         res.status(500).json({ message: "Erro ao buscar pagamento" });
     }
 };

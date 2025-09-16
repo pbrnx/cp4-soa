@@ -7,6 +7,7 @@ const getCarrinho = async (req, res) => {
         const carrinho = await carrinhoService.getCarrinhoByClienteId(clienteId);
         res.status(200).json(carrinho);
     } catch (error) {
+        console.error("Erro em getCarrinho:", error);
         res.status(404).json({ message: error.message });
     }
 };
@@ -18,6 +19,7 @@ const addItem = async (req, res) => {
         const carrinhoAtualizado = await carrinhoService.addItem(carrinhoId, itemData);
         res.status(200).json(carrinhoAtualizado);
     } catch (error) {
+        console.error("Erro em addItem:", error);
         res.status(404).json({ message: error.message });
     }
 };
@@ -28,6 +30,7 @@ const removeItem = async (req, res) => {
         await carrinhoService.removeItem(itemId);
         res.status(204).send();
     } catch (error) {
+        console.error("Erro em removeItem:", error);
         res.status(404).json({ message: error.message });
     }
 };
