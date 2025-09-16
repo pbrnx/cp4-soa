@@ -1,125 +1,89 @@
 // src/repositories/pedido.repositories.js
 const oracledb = require('oracledb');
 const { dbConfig } = require('../config/database');
+const { Pedido, ItemPedido } = require('../models/pedido.model');
 
-// Função genérica para executar queries, agora transacional
-async function execute(actions) {
+// Função transacional
+async function executeInTransaction(actions) {
     let connection;
     try {
         connection = await oracledb.getConnection(dbConfig);
         await connection.beginTransaction();
-
         const results = await actions(connection);
-
         await connection.commit();
         return results;
     } catch (err) {
         if (connection) {
-            try {
-                await connection.rollback();
-            } catch (rollErr) {
-                console.error("Erro ao fazer rollback:", rollErr);
-            }
+            try { await connection.rollback(); } catch (rollErr) { console.error(rollErr); }
         }
-        console.error(err);
         throw err;
     } finally {
         if (connection) {
-            try {
-                await connection.close();
-            } catch (err) {
-                console.error(err);
-            }
+            try { await connection.close(); } catch (err) { console.error(err); }
         }
     }
 }
 
-const createPedidoFromCarrinho = async (carrinho_id) => {
-    return execute(async (connection) => {
-        // 1. Buscar itens do carrinho e o cliente_id
-        const itensCarrinhoSql = `
-            SELECT 
-                c.cliente_id, 
-                ic.produto_id, 
-                ic.quantidade, 
-                ic.preco_unitario 
-            FROM item_carrinho ic
-            JOIN carrinho c ON ic.carrinho_id = c.id
-            WHERE ic.carrinho_id = :carrinho_id`;
-        
-        const itensResult = await connection.execute(itensCarrinhoSql, [carrinho_id]);
-
-        if (itensResult.rows.length === 0) {
-            throw new Error("O carrinho está vazio.");
-        }
-
-        const cliente_id = itensResult.rows[0][0];
-        const total = itensResult.rows.reduce((sum, row) => sum + (row[2] * row[3]), 0);
-        
-        // 2. Criar o pedido
-        const createPedidoSql = `
-            INSERT INTO pedido (cliente_id, total, status) 
-            VALUES (:cliente_id, :total, :status) 
-            RETURNING id INTO :id`;
-        
+const createPedidoFromCarrinho = async (carrinho) => {
+    return executeInTransaction(async (connection) => {
+        // 1. Criar o pedido
+        const total = carrinho.calcularTotal();
+        const createPedidoSql = `INSERT INTO pedido (cliente_id, total, status) VALUES (:cliente_id, :total, :status) RETURNING id INTO :id`;
         const pedidoBind = {
-            cliente_id,
+            cliente_id: carrinho.cliente_id,
             total,
             status: 'CRIADO',
             id: { dir: oracledb.BIND_OUT, type: oracledb.NUMBER }
         };
-
-        const pedidoResult = await connection.execute(createPedidoSql, pedidoBind);
+        const pedidoResult = await connection.execute(createPedidoSql, pedidoBind, { outFormat: oracledb.OUT_FORMAT_OBJECT });
         const pedido_id = pedidoResult.outBinds.id[0];
 
-        // 3. Inserir itens no pedido
-        const createItemPedidoSql = `
-            INSERT INTO item_pedido (pedido_id, produto_id, quantidade, preco_unitario) 
-            VALUES (:pedido_id, :produto_id, :quantidade, :preco_unitario)`;
-        
-        const itensPedidoBinds = itensResult.rows.map(row => ({
-            pedido_id,
-            produto_id: row[1],
-            quantidade: row[2],
-            preco_unitario: row[3]
-        }));
-
+        // 2. Inserir itens no pedido
+        const createItemPedidoSql = `INSERT INTO item_pedido (pedido_id, produto_id, quantidade, preco_unitario) VALUES (:1, :2, :3, :4)`;
+        const itensPedidoBinds = carrinho.itens.map(item => [pedido_id, item.produto_id, item.quantidade, item.preco_unitario]);
         await connection.executeMany(createItemPedidoSql, itensPedidoBinds);
 
-        // 4. Limpar o carrinho
+        // 3. Limpar o carrinho
         const deleteItensCarrinhoSql = `DELETE FROM item_carrinho WHERE carrinho_id = :carrinho_id`;
-        await connection.execute(deleteItensCarrinhoSql, [carrinho_id]);
+        await connection.execute(deleteItensCarrinhoSql, [carrinho.id]);
 
-        return { id: pedido_id, cliente_id, total, status: 'CRIADO', itens: itensPedidoBinds };
+        const novoPedido = new Pedido(pedido_id, carrinho.cliente_id, total, 'CRIADO');
+        carrinho.itens.forEach(item => novoPedido.adicionarItem(new ItemPedido(null, item.produto_id, item.quantidade, item.preco_unitario)));
+        
+        return novoPedido;
     });
 };
 
 const findAllPedidos = async () => {
     const sql = `SELECT * FROM pedido`;
-    const result = await execute(conn => conn.execute(sql));
-    return result.rows.map(([id, cliente_id, total, status]) => ({ id, cliente_id, total, status }));
+    const connection = await oracledb.getConnection(dbConfig);
+    const result = await connection.execute(sql, [], { outFormat: oracledb.OUT_FORMAT_OBJECT });
+    await connection.close();
+    return result.rows.map(row => new Pedido(row.ID, row.CLIENTE_ID, row.TOTAL, row.STATUS));
 };
 
 const findPedidoById = async (id) => {
     const sqlPedido = `SELECT * FROM pedido WHERE id = :id`;
-    const sqlItens = `SELECT * FROM item_pedido WHERE pedido_id = :id`;
+    const sqlItens = `SELECT id, produto_id, quantidade, preco_unitario FROM item_pedido WHERE pedido_id = :id`;
     
-    return execute(async (connection) => {
-        const pedidoResult = await connection.execute(sqlPedido, [id]);
-        if (pedidoResult.rows.length === 0) return null;
+    const connection = await oracledb.getConnection(dbConfig);
+    const pedidoResult = await connection.execute(sqlPedido, [id], { outFormat: oracledb.OUT_FORMAT_OBJECT });
 
-        const itensResult = await connection.execute(sqlItens, [id]);
+    if (pedidoResult.rows.length === 0) {
+        await connection.close();
+        return null;
+    }
+    
+    const row = pedidoResult.rows[0];
+    const pedido = new Pedido(row.ID, row.CLIENTE_ID, row.TOTAL, row.STATUS);
 
-        const [pedidoId, cliente_id, total, status] = pedidoResult.rows[0];
-        const itens = itensResult.rows.map(([itemId, _, produto_id, quantidade, preco_unitario]) => ({
-            id: itemId,
-            produto_id,
-            quantidade,
-            preco_unitario
-        }));
-
-        return { id: pedidoId, cliente_id, total, status, itens };
+    const itensResult = await connection.execute(sqlItens, [id], { outFormat: oracledb.OUT_FORMAT_OBJECT });
+    itensResult.rows.forEach(itemRow => {
+        pedido.adicionarItem(new ItemPedido(itemRow.ID, itemRow.PRODUTO_ID, itemRow.QUANTIDADE, itemRow.PRECO_UNITARIO));
     });
+    
+    await connection.close();
+    return pedido;
 };
 
 module.exports = {

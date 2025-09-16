@@ -9,7 +9,7 @@ router.post('/', pedidoController.createPedido);
 // Obter todos os pedidos
 router.get('/', pedidoController.getAllPedidos);
 
-// Obter um pedido pelo ID
+// Obter um pedido específico pelo seu ID
 router.get('/:id', pedidoController.getPedidoById);
 
 module.exports = router;
