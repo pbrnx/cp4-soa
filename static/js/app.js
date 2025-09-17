@@ -10,6 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const state = {
         currentUser: null,
         carrinho: null,
+        products: [], // <-- NOVO: Array para armazenar todos os produtos
     };
 
     const UI = {
@@ -35,51 +36,48 @@ document.addEventListener('DOMContentLoaded', () => {
     const renderHeader = () => {
         UI.userSessionContainer.innerHTML = '';
         if (state.currentUser) {
-            UI.loginButton.classList.add('d-none');
+            UI.loginButton.classList.add('hidden');
+            
             const welcomeHTML = `
-                <span class="navbar-text me-2">Olá, ${state.currentUser.nome}</span>
-                <button class="btn btn-outline-light" id="logout-button">Sair</button>
+                <span style="color: var(--color-text-body);">Olá, ${state.currentUser.nome}</span>
+                <button class="nav-button" id="logout-button">Sair</button>
             `;
             UI.userSessionContainer.innerHTML += welcomeHTML;
+
             if (state.currentUser.isAdmin) {
                 const adminConsoleButton = `
-                    <button class="btn btn-warning ms-2" id="admin-console-button">
+                    <a href="admin.html" class="nav-button" id="admin-console-button">
                         <i class="bi bi-gear-fill"></i> Admin
-                    </button>
+                    </a>
                 `;
                 UI.userSessionContainer.innerHTML += adminConsoleButton;
             }
         } else {
-            UI.loginButton.classList.remove('d-none');
+            UI.loginButton.classList.remove('hidden');
         }
     };
 
     const renderProducts = (products) => {
         UI.productList.innerHTML = '';
         if (!products || products.length === 0) {
-            UI.productList.innerHTML = '<p class="text-center">Nenhum produto encontrado.</p>';
+            UI.productList.innerHTML = '<p style="text-align: center; color: var(--color-text-body);">Nenhum produto encontrado.</p>';
             return;
         }
         products.forEach(product => {
             const imageUrl = product.imagem_url ? product.imagem_url : `https://via.placeholder.com/300x200.png?text=${encodeURIComponent(product.nome)}`;
             const productCard = `
-                <div class="col">
-                    <div class="card h-100">
-                        <img src="${imageUrl}" class="card-img-top" alt="${product.nome}">
-                        <div class="card-body">
+                <div class="product-card">
+                    <img src="${imageUrl}" class="card-img-top" alt="${product.nome}">
+                    <div class="card-body">
+                        <div>
                             <h5 class="card-title">${product.nome}</h5>
                             <p class="card-text">${product.descricao || ''}</p>
                             <p class="card-price">R$ ${product.preco.toFixed(2)}</p>
                         </div>
-                        <div class="card-footer bg-transparent border-0 d-flex gap-2">
-                            <button class="btn btn-primary w-100 btn-add-to-cart" data-product-id="${product.id}">
+                        <div class="card-footer">
+                            <button class="btn-add-to-cart" data-product-id="${product.id}">
                                 <i class="bi bi-cart-plus-fill"></i> Adicionar
                             </button>
-                            ${state.currentUser && state.currentUser.isAdmin ? `
-                            <button class="btn btn-outline-danger btn-delete-product" data-product-id="${product.id}">
-                                <i class="bi bi-trash-fill"></i>
-                            </button>
-                            ` : ''}
                         </div>
                     </div>
                 </div>
@@ -88,25 +86,36 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     };
 
+    // FUNÇÃO ATUALIZADA
     const renderCart = () => {
         if (!state.carrinho) return;
+        
         const itemCount = state.carrinho.itens.reduce((sum, item) => sum + item.quantidade, 0);
         UI.cartCount.textContent = itemCount;
         UI.cartItemsContainer.innerHTML = '';
+
         if (state.carrinho.itens.length === 0) {
-            UI.cartItemsContainer.innerHTML = '<p class="text-center">Seu carrinho está vazio.</p>';
+            UI.cartItemsContainer.innerHTML = '<p style="text-align: center; color: var(--color-text-body);">Seu carrinho está vazio.</p>';
             UI.checkoutButton.disabled = true;
         } else {
             state.carrinho.itens.forEach(item => {
+                // Lógica para encontrar a imagem do produto
+                const productInfo = state.products.find(p => p.id === item.produto_id);
+                const imageUrl = productInfo?.imagem_url || `https://via.placeholder.com/100x100.png?text=${encodeURIComponent(item.nome_produto)}`;
+
+                // Template HTML com a tag <img>
                 const cartItemHTML = `
                     <div class="cart-item">
+                        <img src="${imageUrl}" alt="${item.nome_produto}" class="cart-item-image">
                         <div class="cart-item-details">
-                            <h6 class="mb-0">${item.nome_produto}</h6>
-                            <small>Quantidade: ${item.quantidade}</small>
-                            <p class="mb-0 fw-bold">R$ ${(item.preco_unitario * item.quantidade).toFixed(2)}</p>
+                            <h6 class="cart-item-title">${item.nome_produto}</h6>
+                            <p class="cart-item-info">Quantidade: ${item.quantidade}</p>
                         </div>
-                        <button class="btn btn-sm btn-outline-danger btn-remove-from-cart" data-item-id="${item.id}">
-                            <i class="bi bi-trash-fill"></i>
+                        <div class="cart-item-price">
+                            <p>R$ ${(item.preco_unitario * item.quantidade).toFixed(2)}</p>
+                        </div>
+                        <button class="btn-remove-from-cart" data-item-id="${item.id}" title="Remover item">
+                            <i class="bi bi-x-lg"></i>
                         </button>
                     </div>
                 `;
@@ -122,10 +131,12 @@ document.addEventListener('DOMContentLoaded', () => {
     //  3. LÓGICA DA APLICAÇÃO E CHAMADAS DE API
     // =================================================================
     
+    // FUNÇÃO ATUALIZADA
     const fetchAndRenderProducts = async () => {
         try {
             const response = await fetch(`${API_URL}/produtos`);
             const products = await response.json();
+            state.products = products; // <-- AQUI guardamos os produtos
             renderProducts(products);
         } catch (error) {
             console.error('Falha ao buscar produtos:', error);
@@ -157,7 +168,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         if (!state.carrinho || !state.carrinho.id) {
             alert('Erro ao encontrar seu carrinho. Por favor, recarregue a página e tente novamente.');
-            console.error('Tentativa de adicionar ao carrinho sem um ID de carrinho válido.');
             return;
         }
         try {
@@ -182,21 +192,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    const handleDeleteProduct = async (productId) => {
-        if (!confirm('Tem certeza que deseja excluir este produto?')) return;
-        try {
-            const response = await fetch(`${API_URL}/produtos/${productId}`, { method: 'DELETE' });
-            if (!response.ok) throw new Error('Falha ao excluir produto.');
-            await fetchAndRenderProducts();
-        } catch (error) {
-            console.error('Erro ao excluir produto:', error);
-            alert(error.message);
-        }
-    };
-    
-    // =================================================================
-    //  NOVA FUNÇÃO DE CHECKOUT IMPLEMENTADA
-    // =================================================================
     const handleCheckout = async () => {
         if (!state.carrinho || state.carrinho.itens.length === 0) {
             alert("Seu carrinho está vazio!");
@@ -204,64 +199,52 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         UI.checkoutButton.disabled = true;
-        UI.checkoutMessage.innerHTML = `<div class="alert alert-info">Processando seu pedido...</div>`;
+        UI.checkoutMessage.innerHTML = `<div class="status-info">Processando seu pedido...</div>`;
 
         try {
-            // 1. Criar o Pedido
             const pedidoResponse = await fetch(`${API_URL}/pedidos`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ carrinhoId: state.carrinho.id })
             });
-
-            if (!pedidoResponse.ok) {
-                throw new Error('Não foi possível criar o pedido.');
-            }
+            if (!pedidoResponse.ok) throw new Error('Não foi possível criar o pedido.');
             const novoPedido = await pedidoResponse.json();
 
-            // 2. Simular o Pagamento
             const pagamentoResponse = await fetch(`${API_URL}/pagamentos`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     pedido_id: novoPedido.id,
-                    metodo: "Cartão de Crédito" // Método de pagamento fixo para o exemplo
+                    metodo: "Cartão de Crédito"
                 })
             });
+            if (!pagamentoResponse.ok) throw new Error('O pagamento falhou.');
 
-            if (!pagamentoResponse.ok) {
-                throw new Error('O pagamento falhou.');
-            }
-
-            // 3. Sucesso!
             UI.checkoutMessage.innerHTML = `
-                <div class="alert alert-success">
+                <div class="status-success">
                     <strong>Pedido #${novoPedido.id} realizado com sucesso!</strong><br>
                     O pagamento foi aprovado. Obrigado por comprar na QualityStore!
-                </div>
-            `;
-            
-            // Atualiza o carrinho (que agora estará vazio)
+                </div>`;
             await fetchCart();
-
         } catch (error) {
             console.error("Erro no checkout:", error);
-            UI.checkoutMessage.innerHTML = `<div class="alert alert-danger">Houve um erro ao finalizar seu pedido: ${error.message}</div>`;
-            UI.checkoutButton.disabled = false; // Habilita o botão para tentar novamente
+            UI.checkoutMessage.innerHTML = `<div class="status-error">Houve um erro: ${error.message}</div>`;
+            UI.checkoutButton.disabled = false;
         }
     };
 
     const switchView = (viewName) => {
-        UI.productsView.classList.add('d-none');
-        UI.cartView.classList.add('d-none');
-        UI.backToProducts.classList.add('d-none');
+        UI.productsView.classList.add('hidden');
+        UI.cartView.classList.add('hidden');
+        UI.backToProducts.classList.add('hidden');
+
         if (viewName === 'products') {
-            UI.productsView.classList.remove('d-none');
+            UI.productsView.classList.remove('hidden');
             UI.pageTitle.textContent = 'Nossos Produtos';
         } else if (viewName === 'cart') {
-            UI.cartView.classList.remove('d-none');
+            UI.cartView.classList.remove('hidden');
             UI.pageTitle.textContent = 'Seu Carrinho';
-            UI.backToProducts.classList.remove('d-none');
+            UI.backToProducts.classList.remove('hidden');
             UI.checkoutMessage.innerHTML = '';
         }
     };
@@ -283,9 +266,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (button.matches('.btn-add-to-cart')) handleAddToCart(button.dataset.productId);
             if (button.matches('.btn-remove-from-cart')) handleRemoveFromCart(button.dataset.itemId);
-            if (button.matches('.btn-delete-product')) handleDeleteProduct(button.dataset.productId);
             if (button.matches('#logout-button')) handleLogout();
-            if (button.matches('#admin-console-button')) location.href = 'admin.html';
         });
 
         UI.cartButton.addEventListener('click', () => {
@@ -308,6 +289,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // =================================================================
     //  5. INICIALIZAÇÃO DA APLICAÇÃO
     // =================================================================
+    
+    // FUNÇÃO ATUALIZADA
     const init = async () => {
         const userFromStorage = localStorage.getItem('currentUser');
         if (userFromStorage) {
@@ -315,7 +298,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         renderHeader();
         setupEventListeners();
-        await fetchAndRenderProducts();
+        
+        // A ordem aqui é crucial: primeiro busca os produtos, depois o carrinho.
+        await fetchAndRenderProducts(); 
+        
         if (state.currentUser) {
             await fetchCart();
         } else {

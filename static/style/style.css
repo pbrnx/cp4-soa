@@ -1,159 +1,685 @@
-/* static/style.css */
+/* static/style/style.css */
 
 /* =============================================== */
-/* VÁRIAVEIS GLOBAIS E ESTILOS DE BASE             */
+/* 1. FUNDAMENTOS E RESET                          */
 /* =============================================== */
 :root {
-    --cor-primaria: #0d6efd; /* Azul do Bootstrap */
-    --cor-secundaria: #6c757d; /* Cinza */
-    --cor-sucesso: #198754; /* Verde */
-    --cor-fundo: #f8f9fa;
-    --cor-texto: #212529;
-    --sombra-suave: 0 4px 15px rgba(0, 0, 0, 0.08);
-    --borda-radius: 0.5rem;
+    --color-background: #f5f5f7;
+    --color-surface: #ffffff;
+    --color-primary: #0071e3;
+    --color-primary-hover: #0077ed;
+    --color-text-headline: #1d1d1f;
+    --color-text-body: #515154;
+    --color-border: #d2d2d7;
+    --shadow-subtle: 0 1px 2px rgba(0,0,0,0.04);
+    --shadow-medium: 0 8px 16px rgba(0,0,0,0.08);
+    --shadow-large: 0 16px 32px rgba(0,0,0,0.1);
+    --border-radius-large: 18px;
+    --border-radius-medium: 12px;
+    --font-system: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
 }
 
 body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background-color: var(--cor-fundo);
-    color: var(--cor-texto);
+    font-family: var(--font-system);
+    background-color: var(--color-background);
+    color: var(--color-text-headline);
     display: flex;
     flex-direction: column;
-    min-height: 100vh; /* Garante que o corpo ocupe 100% da altura da tela */
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
 
-main {
-    flex-grow: 1; /* Faz o conteúdo principal crescer e empurrar o rodapé para baixo */
+.hidden {
+    display: none !important;
 }
-
 
 /* =============================================== */
-/* ESTILOS DO HEADER (BARRA DE NAVEGAÇÃO)          */
+/* 2. HEADER E NAVEGAÇÃO                           */
 /* =============================================== */
-.navbar-brand {
-    font-weight: bold;
-    transition: transform 0.2s ease-in-out;
+.site-header {
+    background-color: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--color-border);
+    padding: 1.25rem 0;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
 }
 
-.navbar-brand:hover {
-    transform: scale(1.05);
+.header-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
-#cart-button .badge {
-    transition: background-color 0.2s, transform 0.2s;
+.site-logo {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--color-text-headline);
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
 }
 
-#cart-button:hover .badge {
-    transform: scale(1.1);
-    background-color: #dc3545; /* Vermelho mais forte no hover */
+.main-nav, .user-session-container {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
 }
 
+.nav-button {
+    font-family: var(--font-system);
+    font-size: 0.9rem;
+    font-weight: 500;
+    padding: 0.6rem 1.2rem;
+    border-radius: 999px; /* Pill shape */
+    border: 1px solid transparent;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.2s ease-in-out;
+}
+
+.nav-button:not(.primary) {
+    background-color: var(--color-background);
+    color: var(--color-text-body);
+    border-color: var(--color-border);
+}
+.nav-button:not(.primary):hover {
+    background-color: #e8e8ed;
+}
+
+.nav-button.primary {
+    background-color: var(--color-primary);
+    color: white;
+}
+.nav-button.primary:hover {
+    background-color: var(--color-primary-hover);
+}
+
+.cart-counter {
+    background-color: var(--color-primary);
+    color: white;
+    font-size: 0.75rem;
+    font-weight: 600;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
 
 /* =============================================== */
-/* CARD DE PRODUTO                                 */
+/* 3. CONTEÚDO PRINCIPAL                           */
 /* =============================================== */
-.card {
-    border: none;
-    border-radius: var(--borda-radius);
-    box-shadow: var(--sombra-suave);
+.site-main {
+    flex-grow: 1;
+}
+
+.main-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 3rem 2rem;
+}
+
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2.5rem;
+}
+
+.page-header h1 {
+    font-size: 2.5rem;
+    font-weight: 700;
+}
+
+.back-button {
+    font-size: 1rem;
+    color: var(--color-primary);
+    text-decoration: none;
+    font-weight: 500;
+}
+
+/* =============================================== */
+/* 4. GRID DE PRODUTOS                             */
+/* =============================================== */
+.product-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 2rem;
+}
+
+.product-card { /* Esta classe deve ser adicionada pelo seu JS ao criar o elemento */
+    background-color: var(--color-surface);
+    border-radius: var(--border-radius-large);
+    box-shadow: var(--shadow-subtle);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
     transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
-.card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+.product-card:hover {
+    transform: translateY(-8px);
+    box-shadow: var(--shadow-medium);
 }
 
-.card-img-top {
-    border-top-left-radius: var(--borda-radius);
-    border-top-right-radius: var(--borda-radius);
+.product-card .card-img-top { /* JS target */
     width: 100%;
-    height: 200px;
-    object-fit: cover; /* Garante que a imagem cubra a área sem distorcer */
-    background-color: #eee;
+    height: 280px;
+    object-fit: cover;
 }
 
-.card-title {
+.product-card .card-body { /* JS target */
+    padding: 1.5rem;
+    text-align: center;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.product-card .card-title { /* JS target */
+    font-size: 1.1rem;
     font-weight: 600;
-    color: var(--cor-texto);
+    margin-bottom: 0.5rem;
 }
 
-.card-price {
+.product-card .card-text { /* JS target */
+    color: var(--color-text-body);
+    font-size: 0.9rem;
+    flex-grow: 1;
+    margin-bottom: 1rem;
+}
+
+.product-card .card-price { /* JS target */
     font-size: 1.25rem;
-    font-weight: bold;
-    color: var(--cor-primaria);
+    font-weight: 600;
+    margin-bottom: 1.5rem;
 }
 
-.btn-add-to-cart {
-    background-color: var(--cor-primaria);
-    color: white;
-    font-weight: bold;
-    transition: background-color 0.2s;
+.product-card .card-footer { /* JS target */
+    padding: 0 1.5rem 1.5rem;
+}
+
+.btn-add-to-cart { /* JS target */
+    width: 100%;
+    background-color: var(--color-background);
+    color: var(--color-primary);
+    border: 1px solid var(--color-border);
+    font-family: var(--font-system);
+    font-size: 0.9rem;
+    font-weight: 600;
+    padding: 0.75rem;
+    border-radius: var(--border-radius-medium);
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
 }
 
 .btn-add-to-cart:hover {
-    background-color: #0b5ed7; /* Um tom mais escuro de azul */
+    background-color: var(--color-primary);
+    color: white;
+    border-color: var(--color-primary);
 }
 
 
 /* =============================================== */
-/* VIEW DO CARRINHO                                */
+/* 5. VISUALIZAÇÃO DO CARRINHO                     */
 /* =============================================== */
-.cart-item {
+.cart-content {
+    max-width: 800px;
+    margin: 2rem auto;
+    background: var(--color-surface);
+    padding: 2.5rem;
+    border-radius: var(--border-radius-large);
+    box-shadow: var(--shadow-medium);
+}
+
+#cart-items-container .cart-item {
     display: flex;
     align-items: center;
-    margin-bottom: 1rem;
-    padding-bottom: 1rem;
-    border-bottom: 1px solid #dee2e6;
+    gap: 1.5rem;
+    padding: 1.5rem 0;
+    border-bottom: 1px solid var(--color-border);
 }
 
-.cart-item-img {
+#cart-items-container .cart-item:first-child {
+    padding-top: 0;
+}
+
+#cart-items-container .cart-item:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.cart-item-image {
     width: 80px;
     height: 80px;
     object-fit: cover;
-    border-radius: var(--borda-radius);
-    margin-right: 1rem;
+    border-radius: var(--border-radius-medium);
+    background-color: var(--color-background);
 }
 
 .cart-item-details {
     flex-grow: 1;
 }
 
-.cart-item-actions button {
-    font-size: 0.8rem;
+.cart-item-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin: 0 0 0.25rem 0;
 }
 
-
-/* =============================================== */
-/* MENSAGENS E LOADERS (para o JS usar depois)     */
-/* =============================================== */
-.loader {
-    text-align: center;
-    padding: 3rem;
-    font-size: 1.5rem;
+.cart-item-info {
+    font-size: 0.9rem;
+    color: var(--color-text-body);
+    margin: 0;
 }
 
-.spinner-border {
-    width: 3rem;
-    height: 3rem;
+.cart-item-price {
+    font-size: 1.1rem;
+    font-weight: 600;
+    text-align: right;
+    min-width: 120px;
 }
 
-/* =============================================== */
-/* ESTILOS PARA PÁGINAS DE AUTH (LOGIN/CADASTRO)   */
-/* =============================================== */
-.container-login, .container-cadastro {
+.btn-remove-from-cart {
+    background-color: var(--color-background);
+    color: var(--color-text-body);
+    border: none;
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 2rem 1rem;
-    min-height: calc(100vh - 56px); /* 56px é a altura da navbar */
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.2s ease;
 }
 
-.card-login, .card-cadastro {
+.btn-remove-from-cart:hover {
+    background-color: #e81123;
+    color: white;
+    transform: scale(1.1);
+}
+
+
+.cart-summary {
+    margin-top: 2rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--color-border);
+}
+
+.cart-total-display {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 1.5rem;
+}
+
+.cart-total-display h3 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--color-text-body);
+}
+
+.cart-total-display span {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--color-text-headline);
+}
+
+.checkout-btn {
     width: 100%;
-    max-width: 400px; /* Largura máxima para o card de login */
+    padding: 1rem;
+    font-size: 1.1rem;
+    font-weight: 600;
+    background: var(--color-primary);
+    color: white;
+    border: none;
+    border-radius: var(--border-radius-medium);
+    cursor: pointer;
+    transition: background-color 0.2s ease;
 }
 
-.card-cadastro {
-    max-width: 450px; /* Um pouco mais largo para o cadastro */
+.checkout-btn:disabled {
+    background-color: var(--color-border);
+    cursor: not-allowed;
+}
+
+.checkout-btn:hover:not(:disabled) {
+    background: var(--color-primary-hover);
+}
+
+.checkout-status {
+    margin-top: 1.5rem;
+    text-align: center;
+}
+
+
+/* =============================================== */
+/* 6. FOOTER                                       */
+/* =============================================== */
+.site-footer-bottom {
+    background-color: var(--color-background);
+    border-top: 1px solid var(--color-border);
+    padding: 2rem 0;
+    font-size: 0.9rem;
+    color: var(--color-text-body);
+}
+
+.footer-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 2rem;
+    text-align: center;
+}
+
+/* =============================================== */
+/* 7. PÁGINAS DE AUTENTICAÇÃO (LOGIN/CADASTRO)     */
+/* =============================================== */
+
+.auth-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 2rem;
+    background-color: var(--color-background);
+}
+
+.auth-card {
+    background-color: var(--color-surface);
+    width: 100%;
+    max-width: 420px;
+    padding: 3rem;
+    border-radius: var(--border-radius-large);
+    box-shadow: var(--shadow-large);
+}
+
+.auth-header {
+    text-align: center;
+    margin-bottom: 2.5rem;
+}
+
+.auth-header .site-logo {
+    justify-content: center;
+    font-size: 1.8rem;
+    margin-bottom: 1rem;
+}
+
+.auth-header h1 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--color-text-body);
+}
+
+.auth-form .form-group {
+    margin-bottom: 1.5rem;
+}
+
+.auth-form label {
+    display: block;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--color-text-body);
+    margin-bottom: 0.5rem;
+}
+
+.form-input {
+    width: 100%;
+    padding: 0.9rem 1rem;
+    font-size: 1rem;
+    font-family: var(--font-system);
+    border: 1px solid var(--color-border);
+    border-radius: var(--border-radius-medium);
+    background-color: var(--color-background);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.form-input:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(0, 113, 227, 0.2);
+}
+
+.form-button {
+    width: 100%;
+    padding: 1rem;
+    margin-top: 1rem;
+    font-size: 1rem;
+    font-weight: 600;
+    background: var(--color-primary);
+    color: white;
+    border: none;
+    border-radius: var(--border-radius-medium);
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.form-button:hover {
+    background: var(--color-primary-hover);
+}
+
+.form-alert {
+    background-color: #ffebee;
+    color: #c62828;
+    border: 1px solid #ef9a9a;
+    padding: 1rem;
+    border-radius: var(--border-radius-medium);
+    margin-top: 1.5rem;
+    font-size: 0.9rem;
+    text-align: center;
+}
+
+.auth-footer {
+    margin-top: 2rem;
+    text-align: center;
+    font-size: 0.9rem;
+    color: var(--color-text-body);
+}
+
+.auth-footer a {
+    color: var(--color-primary);
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.auth-footer a:hover {
+    text-decoration: underline;
+}
+
+.auth-footer p {
+    margin-bottom: 1rem;
+}
+
+.form-alert.success {
+    background-color: #e8f5e9;
+    color: #2e7d32;
+    border: 1px solid #a5d6a7;
+}
+
+/* =============================================== */
+/* 8. PÁGINA DE ADMINISTRAÇÃO                      */
+/* =============================================== */
+.admin-section {
+    margin-bottom: 3rem;
+}
+
+.admin-grid {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 2rem;
+}
+
+.admin-card {
+    background-color: var(--color-surface);
+    border-radius: var(--border-radius-large);
+    padding: 2rem;
+    box-shadow: var(--shadow-subtle);
+}
+
+.admin-card-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.admin-form .form-group {
+    margin-bottom: 1.25rem;
+}
+
+.admin-form .form-actions {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1.5rem;
+}
+
+.form-button.secondary {
+    background-color: var(--color-background);
+    color: var(--color-text-body);
+    border: 1px solid var(--color-border);
+}
+.form-button.secondary:hover {
+    background-color: #e8e8ed;
+}
+
+.admin-list .list-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 0;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.admin-list .list-item:last-child {
+    border-bottom: none;
+}
+
+.list-item-info h6 {
+    font-size: 1rem;
+    font-weight: 600;
+    margin: 0 0 0.25rem;
+}
+.list-item-info small {
+    font-size: 0.85rem;
+    color: var(--color-text-body);
+}
+.status-badge {
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 0.25rem 0.6rem;
+    border-radius: 999px;
+    background-color: var(--color-background);
+    color: var(--color-text-body);
+    margin-left: 0.5rem;
+}
+
+.list-item-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.action-btn {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    font-size: 1.1rem;
+    padding: 0.5rem;
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s ease;
+}
+.action-btn.edit { color: var(--color-primary); }
+.action-btn.delete { color: #d93025; }
+.action-btn.reactivate { color: #1e8e3e; }
+
+.action-btn:hover {
+    background-color: var(--color-background);
+}
+
+.admin-table-container {
+    overflow-x: auto;
+}
+
+.admin-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+}
+
+.admin-table th, .admin-table td {
+    padding: 1rem;
+    border-bottom: 1px solid var(--color-border);
+    font-size: 0.9rem;
+}
+
+.admin-table th {
+    font-weight: 600;
+}
+
+/* Estilos para Imagem do Produto na Lista de Admin */
+.list-item-image {
+    width: 50px;
+    height: 50px;
+    object-fit: cover;
+    border-radius: var(--border-radius-medium);
+    margin-right: 1rem;
+    background-color: var(--color-background);
+}
+
+.list-item .list-item-info {
+    display: flex;
+    align-items: center;
+    flex-grow: 1;
+}
+
+/* Estilos para o novo sistema de Abas */
+.admin-tabs {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: -1px; /* Puxa as abas para cima da borda do card */
+}
+
+.tab-link {
+    font-family: var(--font-system);
+    font-size: 1rem;
+    font-weight: 600;
+    padding: 0.8rem 1.5rem;
+    border: 1px solid var(--color-border);
+    border-bottom: none;
+    border-radius: var(--border-radius-medium) var(--border-radius-medium) 0 0;
+    cursor: pointer;
+    background-color: var(--color-background);
+    color: var(--color-text-body);
+    transition: all 0.2s ease;
+    position: relative;
+    z-index: 1;
+}
+
+.tab-link.active {
+    background-color: var(--color-surface);
+    color: var(--color-text-headline);
 }
