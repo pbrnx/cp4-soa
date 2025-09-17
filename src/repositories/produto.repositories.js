@@ -1,27 +1,8 @@
 // src/repositories/produto.repositories.js
 const oracledb = require('oracledb');
-const { dbConfig } = require('../config/database');
+const { execute } = require('../config/database');
 const Produto = require('../models/produto.model');
 
-async function execute(sql, binds = [], options = {}) {
-    let connection;
-    try {
-        connection = await oracledb.getConnection(dbConfig);
-        const result = await connection.execute(sql, binds, {
-            outFormat: oracledb.OUT_FORMAT_OBJECT,
-            autoCommit: true,
-            ...options
-        });
-        return result;
-    } catch (err) {
-        console.error(err);
-        throw err;
-    } finally {
-        if (connection) {
-            try { await connection.close(); } catch (err) { console.error(err); }
-        }
-    }
-}
 
 const createProduto = async (produtoData) => {
     // CORREÇÃO: Adicionamos a coluna IMAGEM_URL e o bind :imagem_url

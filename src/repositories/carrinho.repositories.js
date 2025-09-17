@@ -1,20 +1,8 @@
 // src/repositories/carrinho.repositories.js
 const oracledb = require('oracledb');
-const { dbConfig } = require('../config/database');
+const { execute } = require('../config/database');
 const { Carrinho, ItemCarrinho } = require('../models/carrinho.model');
 
-async function execute(sql, binds = [], options = {}) {
-    let connection;
-    try {
-        connection = await oracledb.getConnection(dbConfig);
-        const result = await connection.execute(sql, binds, { ...options, autoCommit: true, outFormat: oracledb.OUT_FORMAT_OBJECT });
-        return result;
-    } finally {
-        if (connection) {
-            try { await connection.close(); } catch (err) { console.error(err); }
-        }
-    }
-}
 
 const findCarrinhoByClienteId = async (cliente_id) => {
     const sql = `SELECT id FROM carrinho WHERE cliente_id = :cliente_id`;

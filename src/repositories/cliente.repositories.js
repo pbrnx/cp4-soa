@@ -1,23 +1,9 @@
 // src/repositories/cliente.repositories.js
 const oracledb = require('oracledb');
-const { dbConfig } = require('../config/database');
+const { execute } = require('../config/database');
 const Cliente = require('../models/cliente.model');
 
-async function execute(sql, binds = [], options = {}) {
-    let connection;
-    try {
-        connection = await oracledb.getConnection(dbConfig);
-        const result = await connection.execute(sql, binds, { ...options, autoCommit: true, outFormat: oracledb.OUT_FORMAT_OBJECT });
-        return result;
-    } catch (err) {
-        console.error(err);
-        throw err;
-    } finally {
-        if (connection) {
-            try { await connection.close(); } catch (err) { console.error(err); }
-        }
-    }
-}
+
 
 const createCliente = async (clienteData) => {
     const sql = `INSERT INTO cliente (nome, email, documento) VALUES (:nome, :email, :documento) RETURNING id INTO :id`;

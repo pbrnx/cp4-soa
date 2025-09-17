@@ -1,43 +1,12 @@
 // src/repositories/pedido.repositories.js
 const oracledb = require('oracledb');
-const { dbConfig } = require('../config/database');
+// Importe ambas as funções do nosso módulo de banco de dados
+const { execute, executeTransaction } = require('../config/database');
 const { Pedido, ItemPedido } = require('../models/pedido.model');
 
-// =================================================================
-// FUNÇÃO CORRIGIDA
-// =================================================================
-async function executeInTransaction(actions) {
-    let connection;
-    try {
-        connection = await oracledb.getConnection(dbConfig);
-        // A transação começa implicitamente na primeira execução de DML.
-        // Não é necessário chamar beginTransaction().
-        const results = await actions(connection);
-        await connection.commit(); // Confirma a transação se tudo deu certo
-        return results;
-    } catch (err) {
-        if (connection) {
-            try { 
-                await connection.rollback(); // Desfaz a transação em caso de erro
-            } catch (rollErr) { 
-                console.error(rollErr); 
-            }
-        }
-        throw err;
-    } finally {
-        if (connection) {
-            try { 
-                await connection.close(); 
-            } catch (err) { 
-                console.error(err); 
-            }
-        }
-    }
-}
-// =================================================================
-
 const createPedidoFromCarrinho = async (carrinho) => {
-    return executeInTransaction(async (connection) => {
+    // Use a nova função de transação do pool
+    return executeTransaction(async (connection) => {
         // 1. Criar o pedido
         const total = carrinho.calcularTotal();
         const createPedidoSql = `INSERT INTO pedido (cliente_id, total, status) VALUES (:cliente_id, :total, :status) RETURNING id INTO :id`;
@@ -47,8 +16,7 @@ const createPedidoFromCarrinho = async (carrinho) => {
             status: 'CRIADO',
             id: { dir: oracledb.BIND_OUT, type: oracledb.NUMBER }
         };
-        // As opções { autoCommit: false } são o padrão, mas é bom ser explícito dentro de uma transação.
-        const pedidoResult = await connection.execute(createPedidoSql, pedidoBind, { outFormat: oracledb.OUT_FORMAT_OBJECT });
+        const pedidoResult = await connection.execute(createPedidoSql, pedidoBind);
         const pedido_id = pedidoResult.outBinds.id[0];
 
         // 2. Inserir itens no pedido
@@ -69,33 +37,31 @@ const createPedidoFromCarrinho = async (carrinho) => {
 
 const findAllPedidos = async () => {
     const sql = `SELECT * FROM pedido`;
-    const connection = await oracledb.getConnection(dbConfig);
-    const result = await connection.execute(sql, [], { outFormat: oracledb.OUT_FORMAT_OBJECT });
-    await connection.close();
+    // Use a função 'execute' do pool
+    const result = await execute(sql);
     return result.rows.map(row => new Pedido(row.ID, row.CLIENTE_ID, row.TOTAL, row.STATUS));
 };
 
 const findPedidoById = async (id) => {
+    // Para operações de leitura que precisam ser consistentes, podemos usar a mesma conexão
+    // mas para simplificar e otimizar, podemos fazer duas chamadas separadas ao pool.
     const sqlPedido = `SELECT * FROM pedido WHERE id = :id`;
-    const sqlItens = `SELECT id, produto_id, quantidade, preco_unitario FROM item_pedido WHERE pedido_id = :id`;
-    
-    const connection = await oracledb.getConnection(dbConfig);
-    const pedidoResult = await connection.execute(sqlPedido, [id], { outFormat: oracledb.OUT_FORMAT_OBJECT });
+    const pedidoResult = await execute(sqlPedido, [id]);
 
     if (pedidoResult.rows.length === 0) {
-        await connection.close();
         return null;
     }
     
     const row = pedidoResult.rows[0];
     const pedido = new Pedido(row.ID, row.CLIENTE_ID, row.TOTAL, row.STATUS);
 
-    const itensResult = await connection.execute(sqlItens, [id], { outFormat: oracledb.OUT_FORMAT_OBJECT });
+    const sqlItens = `SELECT id, produto_id, quantidade, preco_unitario FROM item_pedido WHERE pedido_id = :id`;
+    const itensResult = await execute(sqlItens, [id]);
+    
     itensResult.rows.forEach(itemRow => {
         pedido.adicionarItem(new ItemPedido(itemRow.ID, itemRow.PRODUTO_ID, itemRow.QUANTIDADE, itemRow.PRECO_UNITARIO));
     });
     
-    await connection.close();
     return pedido;
 };
 
