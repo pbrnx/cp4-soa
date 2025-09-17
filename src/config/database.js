@@ -16,8 +16,8 @@ async function startup() {
   try {
     pool = await oracledb.createPool({
       ...dbConfig,
-      poolMin: 4,
-      poolMax: 10,
+      poolMin: 2,
+      poolMax: 5,
       poolTimeout: 60,
     });
     console.log("Pool de conexões iniciado com sucesso.");
