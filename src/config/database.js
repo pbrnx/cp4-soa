@@ -1,14 +1,15 @@
 // src/config/database.js
 
 const oracledb = require('oracledb');
+require('dotenv').config();
 
 oracledb.outFormat = oracledb.OUT_FORMAT_OBJECT;
 
 // Configurações de conexão com o Oracle Database
 const dbConfig = {
-    user: "RM99781",
-    password: "270904",
-    connectString: "oracle.fiap.com.br:1521/ORCL"
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    connectString: process.env.DB_URL
 };
 
 // Função para testar a conexão

@@ -1,4 +1,5 @@
 // app.js
+require('dotenv').config(); // Carrega as variáveis de ambiente do .env
 const express = require('express');
 
 // Importação das rotas
@@ -7,6 +8,7 @@ const produtoRoutes = require('./src/routes/produto.routes');
 const carrinhoRoutes = require('./src/routes/carrinho.routes');
 const pedidoRoutes = require('./src/routes/pedido.routes');
 const pagamentoRoutes = require('./src/routes/pagamento.routes');
+const authRoutes = require('./src/routes/auth.routes'); // <-- Rota de autenticação adicionada
 
 // Cria a instância do Express
 const app = express();
@@ -23,6 +25,7 @@ app.get('/', (req, res) => {
 });
 
 // Configuração das rotas da API
+app.use('/api/auth', authRoutes); // <-- Rota de autenticação registrada
 app.use('/api/clientes', clienteRoutes);
 app.use('/api/produtos', produtoRoutes);
 app.use('/api/carrinhos', carrinhoRoutes);

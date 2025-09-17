@@ -1,4 +1,4 @@
-// static/auth.js
+// static/js/auth.js
 
 document.addEventListener('DOMContentLoaded', () => {
     const API_URL = '/api';
@@ -56,7 +56,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     // =================================================================
-    //  LÓGICA PARA A PÁGINA DE LOGIN
+    //  LÓGICA PARA A PÁGINA DE LOGIN (ATUALIZADA)
     // =================================================================
     if (loginForm) {
         const errorAlert = document.getElementById('login-error');
@@ -65,39 +65,34 @@ document.addEventListener('DOMContentLoaded', () => {
             event.preventDefault();
 
             const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value; // Não usado para autenticar, mas necessário no form
+            const password = document.getElementById('password').value;
 
             errorAlert.classList.add('d-none');
 
-            // --- AVISO IMPORTANTE ---
-            // A API atual não tem um endpoint de autenticação (ex: POST /api/login).
-            // Por isso, vamos SIMULAR o login: buscamos todos os clientes e encontramos
-            // um com o e-mail correspondente. Isso NUNCA deve ser feito em produção
-            // por ser inseguro e ineficiente, mas funciona para este projeto.
             try {
-                const response = await fetch(`${API_URL}/clientes`);
-                if (!response.ok) throw new Error('Não foi possível conectar ao servidor.');
+                // Chama o novo endpoint de autenticação no backend
+                const response = await fetch(`${API_URL}/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
 
-                const clientes = await response.json();
-                const clienteEncontrado = clientes.find(cliente => cliente.email === email);
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.message || 'Falha na autenticação.');
+                }
                 
-                if (clienteEncontrado) {
-                    // Login bem-sucedido!
-                    // Guardamos as informações do usuário no localStorage do navegador
-                    localStorage.setItem('currentUser', JSON.stringify({
-                        id: clienteEncontrado.id,
-                        nome: clienteEncontrado.nome,
-                        // Vamos adicionar uma propriedade 'isAdmin' para simular um admin
-                        // Troque para 'true' se quiser que este usuário seja admin
-                        isAdmin: clienteEncontrado.email.includes('admin') // Ex: se o email for 'admin@quality.com'
-                    }));
+                const userData = await response.json();
 
-                    // Redireciona para a página inicial
-                    window.location.href = 'index.html';
-
+                // Login bem-sucedido!
+                // Guardamos as informações do usuário no localStorage
+                localStorage.setItem('currentUser', JSON.stringify(userData));
+                
+                // Redireciona para a página correta (admin ou index)
+                if (userData.isAdmin) {
+                    window.location.href = 'admin.html';
                 } else {
-                    // Cliente não encontrado
-                    throw new Error('E-mail ou senha inválidos.');
+                    window.location.href = 'index.html';
                 }
 
             } catch (error) {
