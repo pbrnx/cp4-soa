@@ -147,6 +147,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
+    // =================================================================
+    //  AJUSTE PRINCIPAL PARA UPLOAD DE IMAGEM
+    // =================================================================
     /** Lida com o envio do formulário para criar ou atualizar um produto */
     UI.productForm.addEventListener('submit', async (event) => {
         event.preventDefault();
@@ -154,13 +157,20 @@ document.addEventListener('DOMContentLoaded', () => {
         const productId = UI.productIdInput.value;
         const isEditing = !!productId;
 
-        const productData = {
-            nome: UI.productNameInput.value,
-            preco: parseFloat(UI.productPriceInput.value),
-            categoria: UI.productCategoryInput.value,
-            descricao: UI.productDescriptionInput.value,
-            ativo: true // Por padrão, sempre ativo ao criar/editar
-        };
+        // Usa FormData para poder enviar o arquivo da imagem junto com os dados
+        const formData = new FormData();
+        formData.append('nome', UI.productNameInput.value);
+        formData.append('preco', parseFloat(UI.productPriceInput.value));
+        formData.append('categoria', UI.productCategoryInput.value);
+        formData.append('descricao', UI.productDescriptionInput.value);
+        formData.append('ativo', true);
+
+        // Pega o campo de input da imagem
+        const imagemInput = document.getElementById('produto-imagem');
+        // Se um arquivo foi selecionado, anexa ele ao FormData
+        if (imagemInput.files[0]) {
+            formData.append('imagem', imagemInput.files[0]);
+        }
 
         const url = isEditing ? `${API_URL}/produtos/${productId}` : `${API_URL}/produtos`;
         const method = isEditing ? 'PUT' : 'POST';
@@ -168,8 +178,9 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const response = await fetch(url, {
                 method: method,
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(productData)
+                // Não definimos o 'Content-Type', o navegador faz isso
+                // automaticamente quando o body é um FormData.
+                body: formData
             });
 
             if (!response.ok) {

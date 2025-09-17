@@ -41,8 +41,18 @@ const getItensByCarrinhoId = async (carrinho_id) => {
 };
 
 const addItemAoCarrinho = async (carrinho_id, itemData, preco_unitario) => {
-    const sql = `INSERT INTO item_carrinho (carrinho_id, produto_id, quantidade, preco_unitario) VALUES (:carrinho_id, :produto_id, :quantidade, :preco_unitario)`;
-    const binds = { carrinho_id, ...itemData, preco_unitario };
+    const sql = `INSERT INTO item_carrinho (carrinho_id, produto_id, quantidade, preco_unitario) 
+                 VALUES (:carrinho_id, :produto_id, :quantidade, :preco_unitario)`;
+    
+    // CORREÇÃO: Construímos o objeto 'binds' explicitamente,
+    // convertendo os IDs para números com parseInt().
+    const binds = {
+        carrinho_id: parseInt(carrinho_id, 10),
+        produto_id: parseInt(itemData.produto_id, 10),
+        quantidade: itemData.quantidade,
+        preco_unitario: preco_unitario
+    };
+
     await execute(sql, binds);
 };
 

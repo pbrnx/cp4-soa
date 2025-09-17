@@ -8,7 +8,7 @@ async function execute(sql, binds = [], options = {}) {
     try {
         connection = await oracledb.getConnection(dbConfig);
         const result = await connection.execute(sql, binds, {
-            outFormat: oracledb.OUT_FORMAT_OBJECT, // É bom manter por padrão
+            outFormat: oracledb.OUT_FORMAT_OBJECT,
             autoCommit: true,
             ...options
         });
@@ -24,21 +24,29 @@ async function execute(sql, binds = [], options = {}) {
 }
 
 const createProduto = async (produtoData) => {
-  
-    const sql = `INSERT INTO produto (nome, preco, categoria, descricao, ativo) VALUES (:nome, :preco, :categoria, :descricao, :ativo) RETURNING id INTO :id`;
+    // CORREÇÃO: Adicionamos a coluna IMAGEM_URL e o bind :imagem_url
+    const sql = `INSERT INTO produto (nome, preco, categoria, descricao, ativo, imagem_url) 
+                 VALUES (:nome, :preco, :categoria, :descricao, :ativo, :imagem_url) 
+                 RETURNING id INTO :id`;
+    
     const binds = {
-        ...produtoData,
+        nome: produtoData.nome,
+        preco: produtoData.preco,
+        categoria: produtoData.categoria,
+        descricao: produtoData.descricao,
+        imagem_url: produtoData.imagem_url || null, // Garante que será null se não for enviado
         ativo: produtoData.ativo !== undefined ? (produtoData.ativo ? 1 : 0) : 1,
         id: { dir: oracledb.BIND_OUT, type: oracledb.NUMBER }
     };
+
     const result = await execute(sql, binds);
     const id = result.outBinds.id[0];
-    return new Produto(id, produtoData.nome, produtoData.preco, produtoData.categoria, produtoData.descricao, produtoData.ativo);
+    return new Produto(id, produtoData.nome, produtoData.preco, produtoData.categoria, produtoData.descricao, produtoData.ativo, produtoData.imagem_url);
 };
 
 const findAllProdutos = async () => {
-    
-    const sql = `SELECT ID, NOME, PRECO, CATEGORIA, TO_CHAR(DESCRICAO) AS DESCRICAO, ATIVO FROM produto WHERE ATIVO=1`;
+    // Adicionamos a coluna IMAGEM_URL para ser retornada
+    const sql = `SELECT ID, NOME, PRECO, CATEGORIA, TO_CHAR(DESCRICAO) AS DESCRICAO, ATIVO, IMAGEM_URL FROM produto WHERE ATIVO=1`;
     const result = await execute(sql);
 
     return result.rows.map(row => ({
@@ -46,13 +54,15 @@ const findAllProdutos = async () => {
         nome: row.NOME,
         preco: row.PRECO,
         categoria: row.CATEGORIA,
-        descricao: row.DESCRICAO, // Agora DESCRICAO já é uma string
-        ativo: !!row.ATIVO
+        descricao: row.DESCRICAO,
+        ativo: !!row.ATIVO,
+        imagem_url: row.IMAGEM_URL // Retorna a URL da imagem
     }));
 };
 
 const findProdutoById = async (id) => {
-    const sql = `SELECT ID, NOME, PRECO, CATEGORIA, TO_CHAR(DESCRICAO) AS DESCRICAO, ATIVO FROM produto WHERE id = :id`;
+    // Adicionamos a coluna IMAGEM_URL
+    const sql = `SELECT ID, NOME, PRECO, CATEGORIA, TO_CHAR(DESCRICAO) AS DESCRICAO, ATIVO, IMAGEM_URL FROM produto WHERE id = :id`;
     const result = await execute(sql, [id]);
 
     if (result.rows.length === 0) return null;
@@ -63,17 +73,31 @@ const findProdutoById = async (id) => {
         nome: row.NOME,
         preco: row.PRECO,
         categoria: row.CATEGORIA,
-        descricao: row.DESCRICAO, // Agora DESCRICAO já é uma string
-        ativo: !!row.ATIVO
+        descricao: row.DESCRICAO,
+        ativo: !!row.ATIVO,
+        imagem_url: row.IMAGEM_URL // Retorna a URL da imagem
     };
 };
 
 const updateProduto = async (id, produtoData) => {
-    const sql = `UPDATE produto SET nome = :nome, preco = :preco, categoria = :categoria, descricao = :descricao, ativo = :ativo WHERE id = :id`;
+    // CORREÇÃO: Adicionamos a coluna IMAGEM_URL ao UPDATE
+    const sql = `UPDATE produto SET 
+                    nome = :nome, 
+                    preco = :preco, 
+                    categoria = :categoria, 
+                    descricao = :descricao, 
+                    ativo = :ativo,
+                    imagem_url = :imagem_url
+                 WHERE id = :id`;
+    
     const binds = {
-        ...produtoData,
         id,
-        ativo: produtoData.ativo ? 1 : 0
+        nome: produtoData.nome,
+        preco: produtoData.preco,
+        categoria: produtoData.categoria,
+        descricao: produtoData.descricao,
+        ativo: produtoData.ativo ? 1 : 0,
+        imagem_url: produtoData.imagem_url || null // Atualiza a imagem
     };
     await execute(sql, binds);
 
@@ -84,15 +108,13 @@ const updateProduto = async (id, produtoData) => {
 };
 
 const deleteProduto = async (id) => {
-    // Em vez de deletar, marcamos como inativo (ATIVO = 0)
     const sql = `UPDATE produto SET ativo = 0 WHERE id = :id`;
     await execute(sql, [id]);
 };
 
-// Adicione esta nova função ao arquivo
 const findAllProductsAdmin = async () => {
-    // Esta query busca TODOS os produtos, sem filtrar por 'ativo'
-    const sql = `SELECT ID, NOME, PRECO, CATEGORIA, TO_CHAR(DESCRICAO) AS DESCRICAO, ATIVO FROM produto ORDER BY ID DESC`;
+    // Adicionamos a coluna IMAGEM_URL
+    const sql = `SELECT ID, NOME, PRECO, CATEGORIA, TO_CHAR(DESCRICAO) AS DESCRICAO, ATIVO, IMAGEM_URL FROM produto ORDER BY ID DESC`;
     const result = await execute(sql);
 
     return result.rows.map(row => ({
@@ -101,11 +123,11 @@ const findAllProductsAdmin = async () => {
         preco: row.PRECO,
         categoria: row.CATEGORIA,
         descricao: row.DESCRICAO,
-        ativo: !!row.ATIVO
+        ativo: !!row.ATIVO,
+        imagem_url: row.IMAGEM_URL
     }));
 };
 
-// Adicione também esta função para reativar
 const reactivateProduto = async (id) => {
     const sql = `UPDATE produto SET ativo = 1 WHERE id = :id`;
     await execute(sql, [id]);
