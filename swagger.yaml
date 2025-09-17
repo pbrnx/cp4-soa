@@ -6,7 +6,7 @@ info:
 servers:
   - url: http://localhost:3000/api
     description: Servidor de Desenvolvimento Local
-  - url: https://cp4-soa.onrender.com/
+  - url: https://cp4-soa.onrender.com/api
     description: Deploy no render
 tags:
   - name: Auth
