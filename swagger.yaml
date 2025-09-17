@@ -1,0 +1,653 @@
+openapi: 3.0.0
+info:
+  title: QualityStore E-commerce API
+  description: API para gerenciar clientes, produtos, carrinhos, pedidos e pagamentos da loja QualityStore.
+  version: 1.0.0
+servers:
+  - url: http://localhost:3000/api
+    description: Servidor de Desenvolvimento Local
+
+tags:
+  - name: Auth
+    description: Autenticação de usuários e administradores
+  - name: Clientes
+    description: Operações relacionadas a clientes
+  - name: Produtos
+    description: Gerenciamento de produtos da loja
+  - name: Carrinhos
+    description: Operações com o carrinho de compras
+  - name: Pedidos
+    description: Gerenciamento de pedidos
+  - name: Pagamentos
+    description: Processamento e consulta de pagamentos
+
+paths:
+  /auth/login:
+    post:
+      tags:
+        - Auth
+      summary: Realiza o login de um cliente ou administrador
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Login bem-sucedido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '401':
+          description: Não autorizado (e-mail ou senha inválidos)
+
+  /clientes:
+    post:
+      tags:
+        - Clientes
+      summary: Cria um novo cliente
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NovoCliente'
+      responses:
+        '201':
+          description: Cliente criado com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cliente'
+        '400':
+          description: Dados inválidos
+
+    get:
+      tags:
+        - Clientes
+      summary: Lista todos os clientes
+      responses:
+        '200':
+          description: Lista de clientes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Cliente'
+
+  /clientes/{id}:
+    get:
+      tags:
+        - Clientes
+      summary: Busca um cliente pelo ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Cliente encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cliente'
+        '404':
+          description: Cliente não encontrado
+    put:
+      tags:
+        - Clientes
+      summary: Atualiza um cliente
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NovoCliente'
+      responses:
+        '200':
+          description: Cliente atualizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cliente'
+        '404':
+          description: Cliente não encontrado
+    delete:
+      tags:
+        - Clientes
+      summary: Deleta um cliente
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Cliente deletado com sucesso
+        '404':
+          description: Cliente não encontrado
+
+  /produtos:
+    get:
+      tags:
+        - Produtos
+      summary: Lista todos os produtos ativos para a loja
+      responses:
+        '200':
+          description: Lista de produtos
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Produto'
+    post:
+      tags:
+        - Produtos
+      summary: Cria um novo produto (com upload de imagem)
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/NovoProduto'
+      responses:
+        '201':
+          description: Produto criado com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Produto'
+        '400':
+          description: Dados inválidos
+
+  /produtos/admin:
+    get:
+      tags:
+        - Produtos
+      summary: (Admin) Lista todos os produtos, incluindo inativos
+      responses:
+        '200':
+          description: Lista completa de produtos
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Produto'
+
+  /produtos/{id}:
+    get:
+      tags:
+        - Produtos
+      summary: Busca um produto pelo ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Produto encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Produto'
+        '404':
+          description: Produto não encontrado
+    put:
+      tags:
+        - Produtos
+      summary: Atualiza um produto (com upload de imagem opcional)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/NovoProduto'
+      responses:
+        '200':
+          description: Produto atualizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Produto'
+        '404':
+          description: Produto não encontrado
+    delete:
+      tags:
+        - Produtos
+      summary: Desativa um produto (soft delete)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Produto desativado com sucesso
+        '404':
+          description: Produto não encontrado
+
+  /produtos/{id}/reactivate:
+    patch:
+      tags:
+        - Produtos
+      summary: (Admin) Reativa um produto inativo
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Produto reativado com sucesso
+        '404':
+          description: Produto não encontrado
+
+  /carrinhos/cliente/{clienteId}:
+    get:
+      tags:
+        - Carrinhos
+      summary: Obtém o carrinho de um cliente (cria se não existir)
+      parameters:
+        - name: clienteId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Carrinho do cliente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Carrinho'
+        '404':
+          description: Cliente não encontrado
+
+  /carrinhos/{carrinhoId}/items:
+    post:
+      tags:
+        - Carrinhos
+      summary: Adiciona um item ao carrinho
+      parameters:
+        - name: carrinhoId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NovoItemCarrinho'
+      responses:
+        '200':
+          description: Item adicionado, retorna o carrinho atualizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Carrinho'
+        '404':
+          description: Carrinho ou produto não encontrado
+
+  /carrinhos/items/{itemId}:
+    delete:
+      tags:
+        - Carrinhos
+      summary: Remove um item do carrinho
+      parameters:
+        - name: itemId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Item removido com sucesso
+        '404':
+          description: Item não encontrado no carrinho
+
+  /pedidos:
+    post:
+      tags:
+        - Pedidos
+      summary: Cria um novo pedido a partir de um carrinho
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                carrinhoId:
+                  type: integer
+              required:
+                - carrinhoId
+      responses:
+        '201':
+          description: Pedido criado com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Pedido'
+        '400':
+          description: Carrinho vazio ou não encontrado
+    get:
+      tags:
+        - Pedidos
+      summary: Lista todos os pedidos
+      responses:
+        '200':
+          description: Lista de pedidos
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Pedido'
+
+  /pedidos/{id}:
+    get:
+      tags:
+        - Pedidos
+      summary: Busca um pedido pelo ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Pedido encontrado com seus itens
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PedidoCompleto'
+        '404':
+          description: Pedido não encontrado
+
+  /pagamentos:
+    post:
+      tags:
+        - Pagamentos
+      summary: Processa o pagamento de um pedido
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NovoPagamento'
+      responses:
+        '201':
+          description: Pagamento criado e processado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Pagamento'
+        '400':
+          description: Pedido inválido ou já pago
+
+  /pagamentos/pedido/{pedidoId}:
+    get:
+      tags:
+        - Pagamentos
+      summary: Busca o pagamento de um pedido específico
+      parameters:
+        - name: pedidoId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Pagamento encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Pagamento'
+        '404':
+          description: Pagamento não encontrado para este pedido
+
+components:
+  schemas:
+    LoginRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          example: admin@admin.com
+        password:
+          type: string
+          example: "12345"
+      required:
+        - email
+        - password
+    LoginResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: ID do cliente (omitido para admin)
+          example: 101
+        nome:
+          type: string
+          example: "Nome do Usuário"
+        isAdmin:
+          type: boolean
+          example: false
+    Cliente:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 101
+        nome:
+          type: string
+          example: "João da Silva"
+        email:
+          type: string
+          example: "joao.silva@example.com"
+        documento:
+          type: string
+          example: "123.456.789-00"
+    NovoCliente:
+      type: object
+      properties:
+        nome:
+          type: string
+          example: "Maria Oliveira"
+        email:
+          type: string
+          example: "maria.oliveira@example.com"
+        documento:
+          type: string
+          example: "987.654.321-00"
+      required:
+        - nome
+        - email
+        - documento
+    Produto:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        nome:
+          type: string
+          example: "Notebook Pro"
+        preco:
+          type: number
+          format: float
+          example: 4999.99
+        categoria:
+          type: string
+          example: "Eletrônicos"
+        descricao:
+          type: string
+          example: "Notebook de alta performance para profissionais."
+        ativo:
+          type: boolean
+          example: true
+        imagem_url:
+          type: string
+          example: "/uploads/imagem-12345.png"
+    NovoProduto:
+      type: object
+      properties:
+        nome:
+          type: string
+        preco:
+          type: number
+          format: float
+        categoria:
+          type: string
+        descricao:
+          type: string
+        imagem:
+          type: string
+          format: binary
+          description: "Arquivo da imagem do produto"
+      required:
+        - nome
+        - preco
+        - categoria
+    ItemCarrinho:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 201
+        produto_id:
+          type: integer
+          example: 1
+        nome_produto:
+          type: string
+          example: "Notebook Pro"
+        quantidade:
+          type: integer
+          example: 1
+        preco_unitario:
+          type: number
+          format: float
+          example: 4999.99
+    Carrinho:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 301
+        cliente_id:
+          type: integer
+          example: 101
+        itens:
+          type: array
+          items:
+            $ref: '#/components/schemas/ItemCarrinho'
+    NovoItemCarrinho:
+      type: object
+      properties:
+        produto_id:
+          type: integer
+          example: 2
+        quantidade:
+          type: integer
+          example: 2
+      required:
+        - produto_id
+        - quantidade
+    Pedido:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 401
+        cliente_id:
+          type: integer
+          example: 101
+        total:
+          type: number
+          format: float
+          example: 5199.97
+        status:
+          type: string
+          example: "CRIADO"
+    ItemPedido:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 501
+        produto_id:
+          type: integer
+          example: 1
+        quantidade:
+          type: integer
+          example: 1
+        preco_unitario:
+          type: number
+          format: float
+          example: 4999.99
+    PedidoCompleto:
+      allOf:
+        - $ref: '#/components/schemas/Pedido'
+        - type: object
+          properties:
+            itens:
+              type: array
+              items:
+                $ref: '#/components/schemas/ItemPedido'
+    Pagamento:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 601
+        pedido_id:
+          type: integer
+          example: 401
+        valor:
+          type: number
+          format: float
+          example: 5199.97
+        status:
+          type: string
+          example: "APROVADO"
+        metodo:
+          type: string
+          example: "Cartão de Crédito"
+    NovoPagamento:
+      type: object
+      properties:
+        pedido_id:
+          type: integer
+          example: 401
+        metodo:
+          type: string
+          example: "Cartão de Crédito"
+      required:
+        - pedido_id
+        - metodo
