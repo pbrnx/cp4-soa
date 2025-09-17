@@ -9,6 +9,10 @@ router.get('/cliente/:clienteId', carrinhoController.getCarrinho);
 // Adicionar um item a um carrinho específico
 router.post('/:carrinhoId/items', carrinhoController.addItem);
 
+// **NOVA ROTA ADICIONADA**
+// Atualizar a quantidade de um item específico
+router.put('/items/:itemId', carrinhoController.updateItem);
+
 // Remover um item específico do carrinho
 router.delete('/items/:itemId', carrinhoController.removeItem);
 

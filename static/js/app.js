@@ -1,4 +1,4 @@
-// static/app.js
+// static/js/app.js
 
 document.addEventListener('DOMContentLoaded', () => {
     
@@ -10,7 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const state = {
         currentUser: null,
         carrinho: null,
-        products: [], // <-- NOVO: Array para armazenar todos os produtos
+        products: [],
     };
 
     const UI = {
@@ -85,8 +85,7 @@ document.addEventListener('DOMContentLoaded', () => {
             UI.productList.innerHTML += productCard;
         });
     };
-
-    // FUNÇÃO ATUALIZADA
+    
     const renderCart = () => {
         if (!state.carrinho) return;
         
@@ -99,17 +98,20 @@ document.addEventListener('DOMContentLoaded', () => {
             UI.checkoutButton.disabled = true;
         } else {
             state.carrinho.itens.forEach(item => {
-                // Lógica para encontrar a imagem do produto
                 const productInfo = state.products.find(p => p.id === item.produto_id);
                 const imageUrl = productInfo?.imagem_url || `https://via.placeholder.com/100x100.png?text=${encodeURIComponent(item.nome_produto)}`;
 
-                // Template HTML com a tag <img>
                 const cartItemHTML = `
                     <div class="cart-item">
                         <img src="${imageUrl}" alt="${item.nome_produto}" class="cart-item-image">
                         <div class="cart-item-details">
                             <h6 class="cart-item-title">${item.nome_produto}</h6>
-                            <p class="cart-item-info">Quantidade: ${item.quantidade}</p>
+                            <p class="cart-item-info">R$ ${item.preco_unitario.toFixed(2)} cada</p>
+                            <div class="cart-item-quantity-controls">
+                                <button class="btn-quantity" data-item-id="${item.id}" data-action="decrease" title="Diminuir">-</button>
+                                <span>${item.quantidade}</span>
+                                <button class="btn-quantity" data-item-id="${item.id}" data-action="increase" title="Aumentar">+</button>
+                            </div>
                         </div>
                         <div class="cart-item-price">
                             <p>R$ ${(item.preco_unitario * item.quantidade).toFixed(2)}</p>
@@ -131,12 +133,11 @@ document.addEventListener('DOMContentLoaded', () => {
     //  3. LÓGICA DA APLICAÇÃO E CHAMADAS DE API
     // =================================================================
     
-    // FUNÇÃO ATUALIZADA
     const fetchAndRenderProducts = async () => {
         try {
             const response = await fetch(`${API_URL}/produtos`);
             const products = await response.json();
-            state.products = products; // <-- AQUI guardamos os produtos
+            state.products = products;
             renderProducts(products);
         } catch (error) {
             console.error('Falha ao buscar produtos:', error);
@@ -180,6 +181,34 @@ document.addEventListener('DOMContentLoaded', () => {
             await fetchCart();
         } catch (error) {
             console.error('Falha ao adicionar item:', error);
+        }
+    };
+
+    const handleUpdateQuantity = async (itemId, action) => {
+        const item = state.carrinho.itens.find(i => i.id === parseInt(itemId));
+        if (!item) return;
+
+        let novaQuantidade = item.quantidade;
+        if (action === 'increase') {
+            novaQuantidade++;
+        } else if (action === 'decrease') {
+            novaQuantidade--;
+        }
+
+        try {
+            // Se a quantidade for 0 ou menos, removemos o item. Caso contrário, atualizamos.
+            if (novaQuantidade <= 0) {
+                await fetch(`${API_URL}/carrinhos/items/${itemId}`, { method: 'DELETE' });
+            } else {
+                await fetch(`${API_URL}/carrinhos/items/${itemId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ quantidade: novaQuantidade })
+                });
+            }
+            await fetchCart();
+        } catch (error) {
+            console.error('Falha ao atualizar a quantidade do item:', error);
         }
     };
 
@@ -267,6 +296,11 @@ document.addEventListener('DOMContentLoaded', () => {
             if (button.matches('.btn-add-to-cart')) handleAddToCart(button.dataset.productId);
             if (button.matches('.btn-remove-from-cart')) handleRemoveFromCart(button.dataset.itemId);
             if (button.matches('#logout-button')) handleLogout();
+            if (button.matches('.btn-quantity')) {
+                const itemId = button.dataset.itemId;
+                const action = button.dataset.action;
+                handleUpdateQuantity(itemId, action);
+            }
         });
 
         UI.cartButton.addEventListener('click', () => {
@@ -290,7 +324,6 @@ document.addEventListener('DOMContentLoaded', () => {
     //  5. INICIALIZAÇÃO DA APLICAÇÃO
     // =================================================================
     
-    // FUNÇÃO ATUALIZADA
     const init = async () => {
         const userFromStorage = localStorage.getItem('currentUser');
         if (userFromStorage) {
@@ -299,7 +332,6 @@ document.addEventListener('DOMContentLoaded', () => {
         renderHeader();
         setupEventListeners();
         
-        // A ordem aqui é crucial: primeiro busca os produtos, depois o carrinho.
         await fetchAndRenderProducts(); 
         
         if (state.currentUser) {
