@@ -5,7 +5,6 @@ const Produto = require('../models/produto.model');
 
 
 const createProduto = async (produtoData) => {
-    // CORREÇÃO: Adicionamos a coluna IMAGEM_URL e o bind :imagem_url
     const sql = `INSERT INTO produto (nome, preco, categoria, descricao, ativo, imagem_url) 
                  VALUES (:nome, :preco, :categoria, :descricao, :ativo, :imagem_url) 
                  RETURNING id INTO :id`;
@@ -15,18 +14,18 @@ const createProduto = async (produtoData) => {
         preco: produtoData.preco,
         categoria: produtoData.categoria,
         descricao: produtoData.descricao,
-        imagem_url: produtoData.imagem_url || null, // Garante que será null se não for enviado
+        imagem_url: produtoData.imagem_url || null,
         ativo: produtoData.ativo !== undefined ? (produtoData.ativo ? 1 : 0) : 1,
         id: { dir: oracledb.BIND_OUT, type: oracledb.NUMBER }
     };
 
-    const result = await execute(sql, binds);
+    // CORREÇÃO: Adicionado autoCommit para garantir que o INSERT seja salvo.
+    const result = await execute(sql, binds, { autoCommit: true });
     const id = result.outBinds.id[0];
     return new Produto(id, produtoData.nome, produtoData.preco, produtoData.categoria, produtoData.descricao, produtoData.ativo, produtoData.imagem_url);
 };
 
 const findAllProdutos = async () => {
-    // Adicionamos a coluna IMAGEM_URL para ser retornada
     const sql = `SELECT ID, NOME, PRECO, CATEGORIA, TO_CHAR(DESCRICAO) AS DESCRICAO, ATIVO, IMAGEM_URL FROM produto WHERE ATIVO=1`;
     const result = await execute(sql);
 
@@ -37,14 +36,14 @@ const findAllProdutos = async () => {
         categoria: row.CATEGORIA,
         descricao: row.DESCRICAO,
         ativo: !!row.ATIVO,
-        imagem_url: row.IMAGEM_URL // Retorna a URL da imagem
+        imagem_url: row.IMAGEM_URL
     }));
 };
 
 const findProdutoById = async (id) => {
-    // Adicionamos a coluna IMAGEM_URL
     const sql = `SELECT ID, NOME, PRECO, CATEGORIA, TO_CHAR(DESCRICAO) AS DESCRICAO, ATIVO, IMAGEM_URL FROM produto WHERE id = :id`;
-    const result = await execute(sql, [id]);
+    // CORREÇÃO: Convertendo ID para número.
+    const result = await execute(sql, [parseInt(id, 10)]);
 
     if (result.rows.length === 0) return null;
 
@@ -56,12 +55,11 @@ const findProdutoById = async (id) => {
         categoria: row.CATEGORIA,
         descricao: row.DESCRICAO,
         ativo: !!row.ATIVO,
-        imagem_url: row.IMAGEM_URL // Retorna a URL da imagem
+        imagem_url: row.IMAGEM_URL
     };
 };
 
 const updateProduto = async (id, produtoData) => {
-    // CORREÇÃO: Adicionamos a coluna IMAGEM_URL ao UPDATE
     const sql = `UPDATE produto SET 
                     nome = :nome, 
                     preco = :preco, 
@@ -72,15 +70,16 @@ const updateProduto = async (id, produtoData) => {
                  WHERE id = :id`;
     
     const binds = {
-        id,
+        id: parseInt(id, 10), // CORREÇÃO: Convertendo ID para número.
         nome: produtoData.nome,
         preco: produtoData.preco,
         categoria: produtoData.categoria,
         descricao: produtoData.descricao,
         ativo: produtoData.ativo ? 1 : 0,
-        imagem_url: produtoData.imagem_url || null // Atualiza a imagem
+        imagem_url: produtoData.imagem_url || null
     };
-    await execute(sql, binds);
+    // CORREÇÃO: Adicionado autoCommit para garantir que o UPDATE seja salvo.
+    await execute(sql, binds, { autoCommit: true });
 
     return {
         id: parseInt(id, 10),
@@ -90,11 +89,11 @@ const updateProduto = async (id, produtoData) => {
 
 const deleteProduto = async (id) => {
     const sql = `UPDATE produto SET ativo = 0 WHERE id = :id`;
-    await execute(sql, [id]);
+    // CORREÇÃO: Adicionado autoCommit e conversão de ID.
+    await execute(sql, [parseInt(id, 10)], { autoCommit: true });
 };
 
 const findAllProductsAdmin = async () => {
-    // Adicionamos a coluna IMAGEM_URL
     const sql = `SELECT ID, NOME, PRECO, CATEGORIA, TO_CHAR(DESCRICAO) AS DESCRICAO, ATIVO, IMAGEM_URL FROM produto ORDER BY ID DESC`;
     const result = await execute(sql);
 
@@ -111,7 +110,8 @@ const findAllProductsAdmin = async () => {
 
 const reactivateProduto = async (id) => {
     const sql = `UPDATE produto SET ativo = 1 WHERE id = :id`;
-    await execute(sql, [id]);
+    // CORREÇÃO: Adicionado autoCommit e conversão de ID.
+    await execute(sql, [parseInt(id, 10)], { autoCommit: true });
 };
 
 module.exports = {
@@ -122,4 +122,4 @@ module.exports = {
     deleteProduto,
     findAllProductsAdmin,
     reactivateProduto
-};
+};  
