@@ -1,6 +1,7 @@
 // app.js
 require('dotenv').config();
 const express = require('express');
+const database = require('./src/config/database');
 
 // --- Configuração do Swagger com arquivo estático ---
 const swaggerUi = require('swagger-ui-express');
@@ -15,37 +16,45 @@ const pedidoRoutes = require('./src/routes/pedido.routes');
 const pagamentoRoutes = require('./src/routes/pagamento.routes');
 const authRoutes = require('./src/routes/auth.routes'); 
 
-// Cria a instância do Express
-const app = express();
 
-// --- Rota da Documentação ---
-// Agora usa o objeto carregado do arquivo
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+database.startup().then(() => {
+    // Cria a instância do Express
+    const app = express();
 
-// Middleware para permitir que o Express entenda JSON no corpo das requisições
-app.use(express.json());
+    // --- Rota da Documentação ---
+    // Agora usa o objeto carregado do arquivo
+    app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
-// Servir arquivos estáticos
-app.use(express.static('static'));
+    // Middleware para permitir que o Express entenda JSON no corpo das requisições
+    app.use(express.json());
 
-// Rota raiz redireciona para a documentação
-app.get('/', (req, res) => {
-    res.redirect('/api-docs');
-});
+    // Servir arquivos estáticos
+    app.use(express.static('static'));
 
-// Configuração das rotas da API
-app.use('/api/auth', authRoutes);
-app.use('/api/clientes', clienteRoutes);
-app.use('/api/produtos', produtoRoutes);
-app.use('/api/carrinhos', carrinhoRoutes);
-app.use('/api/pedidos', pedidoRoutes);
-app.use('/api/pagamentos', pagamentoRoutes);
+    // Rota raiz redireciona para a documentação
+    app.get('/', (req, res) => {
+        res.redirect('/api-docs');
+    });
 
-// Define a porta em que o servidor vai escutar
-const PORT = process.env.PORT || 3000;
+    // Configuração das rotas da API
+    app.use('/api/auth', authRoutes);
+    app.use('/api/clientes', clienteRoutes);
+    app.use('/api/produtos', produtoRoutes);
+    app.use('/api/carrinhos', carrinhoRoutes);
+    app.use('/api/pedidos', pedidoRoutes);
+    app.use('/api/pagamentos', pagamentoRoutes);
 
-// Inicia o servidor
-app.listen(PORT, () => {
-    console.log(`Servidor rodando na porta ${PORT}`);
-    console.log(`Acesse a documentação em http://localhost:${PORT}/api-docs`);
-});
+    // Define a porta em que o servidor vai escutar
+    const PORT = process.env.PORT || 3000;
+
+    // Inicia o servidor
+    app.listen(PORT, () => {
+        console.log(`Servidor rodando na porta ${PORT}`);
+        console.log(`Acesse a documentação em http://localhost:${PORT}/api-docs`);
+    });
+
+}).catch(err => {
+    console.error("Erro ao iniciar a aplicação:", err);
+    process.exit(1); // Encerra se não conseguir iniciar o pool
+
+})
