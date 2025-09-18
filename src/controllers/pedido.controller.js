@@ -1,5 +1,8 @@
-// src/controllers/pedido.controller.js
+//src/controllers/pedido.controller.js
+
 const pedidoService = require('../services/pedido.services');
+
+const { PedidoResponseDTO } = require('../dtos/pedido.dtos');
 
 const createPedido = async (req, res) => {
     try {
@@ -8,7 +11,9 @@ const createPedido = async (req, res) => {
             return res.status(400).json({ message: "O ID do carrinho é obrigatório." });
         }
         const novoPedido = await pedidoService.createPedido(carrinhoId);
-        res.status(201).json(novoPedido);
+        // 2. MAPEIE O RESULTADO PARA O DTO
+        const pedidoResponse = new PedidoResponseDTO(novoPedido);
+        res.status(201).json(pedidoResponse);
     } catch (error) {
         console.error("Erro em createPedido:", error);
         res.status(400).json({ message: error.message });
@@ -18,7 +23,9 @@ const createPedido = async (req, res) => {
 const getAllPedidos = async (req, res) => {
     try {
         const pedidos = await pedidoService.getAllPedidos();
-        res.status(200).json(pedidos);
+    
+        const pedidosResponse = pedidos.map(pedido => new PedidoResponseDTO(pedido));
+        res.status(200).json(pedidosResponse);
     } catch (error) {
         console.error("Erro em getAllPedidos:", error);
         res.status(500).json({ message: "Erro ao buscar pedidos" });
@@ -31,7 +38,9 @@ const getPedidoById = async (req, res) => {
         if (!pedido) {
             return res.status(404).json({ message: "Pedido não encontrado" });
         }
-        res.status(200).json(pedido);
+        // 2. MAPEIE O RESULTADO PARA O DTO
+        const pedidoResponse = new PedidoResponseDTO(pedido);
+        res.status(200).json(pedidoResponse);
     } catch (error) {
         console.error("Erro em getPedidoById:", error);
         res.status(500).json({ message: "Erro ao buscar pedido" });

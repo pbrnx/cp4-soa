@@ -1,11 +1,17 @@
-// src/controllers/carrinho.controller.js
+//  src/controllers/carrinho.controller.js
+
 const carrinhoService = require('../services/carrinho.services');
+
+const { CarrinhoResponseDTO } = require('../dtos/carrinho.dtos');
 
 const getCarrinho = async (req, res) => {
     try {
         const { clienteId } = req.params;
         const carrinho = await carrinhoService.getCarrinhoByClienteId(clienteId);
-        res.status(200).json(carrinho);
+        
+        // 2. MAPEIE O RESULTADO PARA O DTO
+        const carrinhoResponse = new CarrinhoResponseDTO(carrinho);
+        res.status(200).json(carrinhoResponse);
     } catch (error) {
         console.error("Erro em getCarrinho:", error);
         res.status(404).json({ message: error.message });
@@ -17,14 +23,17 @@ const addItem = async (req, res) => {
         const { carrinhoId } = req.params;
         const itemData = req.body;
         const carrinhoAtualizado = await carrinhoService.addItem(carrinhoId, itemData);
-        res.status(200).json(carrinhoAtualizado);
+
+   
+        const carrinhoResponse = new CarrinhoResponseDTO(carrinhoAtualizado);
+        res.status(200).json(carrinhoResponse);
     } catch (error) {
         console.error("Erro em addItem:", error);
         res.status(404).json({ message: error.message });
     }
 };
 
-// **NOVA FUNÇÃO ADICIONADA**
+
 const updateItem = async (req, res) => {
     try {
         const { itemId } = req.params;
@@ -35,7 +44,6 @@ const updateItem = async (req, res) => {
         }
 
         await carrinhoService.updateItemQuantidade(itemId, quantidade);
-        // Retorna 204 No Content, indicando sucesso sem corpo de resposta.
         res.status(204).send();
 
     } catch (error) {
@@ -43,7 +51,6 @@ const updateItem = async (req, res) => {
         res.status(404).json({ message: error.message });
     }
 };
-
 
 const removeItem = async (req, res) => {
     try {
@@ -59,6 +66,6 @@ const removeItem = async (req, res) => {
 module.exports = {
     getCarrinho,
     addItem,
-    updateItem, 
+    updateItem,
     removeItem
 };
