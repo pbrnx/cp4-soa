@@ -15,11 +15,12 @@ O deploy da aplicação foi feito no render, nesse link: https://cp4-soa.onrende
 
 Para acessar a relação de endpoints, use a rota https://cp4-soa.onrender.com/api-docs. É possível testar todos os endpoints por meio da interface do OpenAPI (Swagger)
 
-![alt text](image-3.png)
+<img width="1904" height="949" alt="image" src="https://github.com/user-attachments/assets/67c92779-319d-4a09-aafc-59790ecebdd3" />
+
 
 Para acessar o frontend, use a rota https://cp4-soa.onrender.com/pages
 
-![alt text](image.png)
+<img width="1899" height="954" alt="image" src="https://github.com/user-attachments/assets/e98a3b80-34d0-4120-bce6-61f05537db61" />
 
 ---
 ## Tecnologias Utilizadas
@@ -177,7 +178,8 @@ Se tudo estiver correto, você verá no console:
 Servidor rodando na porta 3000
 Acesse a documentação em http://localhost:3000/api-docs 
 ```
-![alt text](image-1.png)
+<img width="970" height="196" alt="image" src="https://github.com/user-attachments/assets/cf123040-6923-48ff-93dc-445953a2ab4e" />
+
 ---
 
 ## 4. Acesso à Documentação (Swagger)
@@ -206,7 +208,8 @@ ou
 ```bash
 https://cp4-soa.onrender.com/api-docs
 ```
-![alt text](image-2.png)
+<img width="1904" height="949" alt="image" src="https://github.com/user-attachments/assets/e2f09904-54a3-4133-8bed-b04abd137cee" />
+
 ---
 
 ## 6. Estrutura do Projeto
