@@ -5,16 +5,26 @@ API REST completa para gerenciar clientes, produtos, carrinhos, pedidos e pagame
 
 ## Integrantes do Grupo
 - Nome: Pedro Augusto Carneiro Barone Bomfim - RM: 99781 
-- Nome: [Nome do Integrante 2] - RM: [RM do Integrante 2]  
-- Nome: [Nome do Integrante 3] - RM: [RM do Integrante 3]  
-- Nome: [Nome do Integrante 4] - RM: [RM do Integrante 4]  
-
+- Nome: João Pedro de Albuquerque Oliveira - RM: 551579
+- Nome: Matheus Augusto Santos Rego - RM:551466
+- Nome: Ian Cancian Nachtergaele - RM: 98387
 
 ---
+## Como usar?
+O deploy da aplicação foi feito no render, nesse link: https://cp4-soa.onrender.com
 
+Para acessar a relação de endpoints, use a rota https://cp4-soa.onrender.com/api-docs. É possível testar todos os endpoints por meio da interface do OpenAPI (Swagger)
+
+![alt text](image-3.png)
+
+Para acessar o frontend, use a rota https://cp4-soa.onrender.com/pages
+
+![alt text](image.png)
+
+---
 ## Tecnologias Utilizadas
 - **Backend:** Node.js com Express.js
-- **Banco de Dados:** Oracle Database
+- **Banco de Dados:** Oracle Database (Cloud FIAP)
 - **Driver Oracle:** oracledb
 - **Documentação:** Swagger UI com swagger-ui-express e yamljs
 - **Variáveis de Ambiente:** dotenv
@@ -22,7 +32,7 @@ API REST completa para gerenciar clientes, produtos, carrinhos, pedidos e pagame
 
 ---
 
-## 1. Pré-requisitos
+## 1. Pré-requisitos (execução local)
 ### 1.1. Node.js
 Node.js (versão 18 ou superior): Essencial para rodar o servidor da aplicação.  
 Para instalar, acesse o site oficial: [nodejs.org](https://nodejs.org)
@@ -165,34 +175,38 @@ node app.js
 Se tudo estiver correto, você verá no console:
 ```
 Servidor rodando na porta 3000
-Acesse a documentação em http://localhost:3000/api-docs
+Acesse a documentação em http://localhost:3000/api-docs 
 ```
-
+![alt text](image-1.png)
 ---
 
 ## 4. Acesso à Documentação (Swagger)
 Com o servidor rodando, acesse:
 ```
-http://localhost:3000/api-docs
+http://localhost:3000/api-docs ou 
 ```
 
 ---
 
 ## 5. Testando a API
-O projeto inclui um script de teste de integração (**test.js**) que executa um fluxo completo:
-- Cria um cliente.
-- Cria um produto.
-- Adiciona o produto ao carrinho.
-- Remove um item temporário do carrinho.
-- Cria um pedido a partir do carrinho.
-- Realiza o pagamento.
-- Limpa os dados de teste.
+Na documentação do Swagger, é possível testar todos os endpoints disponíveis, com todos os verbos de cada processo. É possíve:
+- Criar um cliente.
+- Criar um produto.
+- Adicionar o produto ao carrinho.
+- Remover um item temporário do carrinho.
+- Criar um pedido a partir do carrinho.
+- Realizar o pagamento.
+- Entre outros
 
-Para executar:
+Para executar, acesse a rota:
 ```bash
-node test.js
+localhost:3000/api-docs 
 ```
-
+ou 
+```bash
+https://cp4-soa.onrender.com/api-docs
+```
+![alt text](image-2.png)
 ---
 
 ## 6. Estrutura do Projeto
@@ -203,6 +217,7 @@ src/
  ├─ repositories/  # Acesso ao banco de dados
  ├─ models/        # Entidades do domínio
  ├─ routes/        # Definição dos endpoints
+ ├─ dtos/          # Transporte de dados entre camadas
  ├─ config/        # Configurações do banco e upload
 static/            # Interface frontend para testes
 swagger.yaml       # Definição da documentação Swagger
