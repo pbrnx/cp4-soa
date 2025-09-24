@@ -185,7 +185,7 @@ Acesse a documentação em http://localhost:3000/api-docs
 ## 4. Acesso à Documentação (Swagger)
 Com o servidor rodando, acesse:
 ```
-http://localhost:3000/api-docs ou 
+http://localhost:3000/api-docs
 ```
 
 ---
