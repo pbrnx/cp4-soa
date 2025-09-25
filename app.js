@@ -33,7 +33,7 @@ database.startup().then(() => {
 
     // Rota raiz redireciona para a documentação
     app.get('/', (req, res) => {
-        res.redirect('/api-docs');
+        res.redirect('/pages');
     });
 
     // Configuração das rotas da API
