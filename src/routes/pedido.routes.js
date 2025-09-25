@@ -12,4 +12,7 @@ router.get('/', pedidoController.getAllPedidos);
 // Obter um pedido específico pelo seu ID
 router.get('/:id', pedidoController.getPedidoById);
 
+// Adiciona a nova rota para atualizar o status
+router.put('/:id/status', pedidoController.updatePedidoStatus);
+
 module.exports = router;

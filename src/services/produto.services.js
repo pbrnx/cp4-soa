@@ -2,6 +2,10 @@
 const produtoRepository = require('../repositories/produto.repositories');
 
 const createProduto = async (produtoData) => {
+
+    if (!produtoData.nome || produtoData.preco === undefined || !produtoData.categoria) {
+        throw new Error("Os campos 'nome', 'preco' e 'categoria' são obrigatórios.");
+    }
     if (produtoData.preco < 0) {
         throw new Error("O preço do produto não pode ser negativo.");
     }
@@ -21,6 +25,11 @@ const updateProduto = async (id, produtoData) => {
     if (!produtoExistente) {
         throw new Error("Produto não encontrado para atualização.");
     }
+    
+
+    if (!produtoData.nome || produtoData.preco === undefined || !produtoData.categoria) {
+        throw new Error("Os campos 'nome', 'preco' e 'categoria' são obrigatórios.");
+    }
     if (produtoData.preco < 0) {
         throw new Error("O preço do produto não pode ser negativo.");
     }
@@ -35,12 +44,10 @@ const deleteProduto = async (id) => {
     return await produtoRepository.deleteProduto(id);
 };
 
-// Adicione esta nova função ao arquivo
 const getAllProdutosAdmin = async () => {
     return await produtoRepository.findAllProductsAdmin();
 };
 
-// Adicione também esta função de reativação
 const reactivateProduto = async (id) => {
     const produtoExistente = await produtoRepository.findProdutoById(id);
     if (!produtoExistente) {

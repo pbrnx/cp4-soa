@@ -2,8 +2,10 @@
 const clienteRepository = require('../repositories/cliente.repositories');
 
 const createCliente = async (clienteData) => {
-    // Futuramente, aqui podem entrar regras de negócio.
-    // Ex: Validar se o formato do 'documento' é de CPF ou CNPJ.
+    // ATUALIZAÇÃO: Validações de negócio adicionadas
+    if (!clienteData.nome || !clienteData.email || !clienteData.documento) {
+        throw new Error("Os campos 'nome', 'email' e 'documento' são obrigatórios.");
+    }
     return await clienteRepository.createCliente(clienteData);
 };
 
@@ -14,15 +16,16 @@ const getAllClientes = async () => {
 const getClienteById = async (id) => {
     const cliente = await clienteRepository.findClienteById(id);
     if (!cliente) {
-        // A camada de serviço decide o que fazer em caso de não encontrar.
-        // Lançar um erro customizado seria uma boa prática.
         return null;
     }
     return cliente;
 };
 
 const updateCliente = async (id, clienteData) => {
-    // Regra de negócio: verificar se o cliente existe antes de atualizar.
+    if (!clienteData.nome || !clienteData.email || !clienteData.documento) {
+        throw new Error("Os campos 'nome', 'email' e 'documento' são obrigatórios.");
+    }
+
     const clienteExistente = await clienteRepository.findClienteById(id);
     if (!clienteExistente) {
         throw new Error("Cliente não encontrado para atualização.");
@@ -31,7 +34,6 @@ const updateCliente = async (id, clienteData) => {
 };
 
 const deleteCliente = async (id) => {
-     // Regra de negócio: verificar se o cliente existe antes de deletar.
     const clienteExistente = await clienteRepository.findClienteById(id);
     if (!clienteExistente) {
         throw new Error("Cliente não encontrado para exclusão.");

@@ -45,7 +45,7 @@ database.startup().then(() => {
     app.use('/api/pagamentos', pagamentoRoutes);
 
     // Define a porta em que o servidor vai escutar
-    const PORT = process.env.PORT || 3000;
+    const PORT = process.env.PORT || 443;
 
     // Inicia o servidor
     app.listen(PORT, () => {
