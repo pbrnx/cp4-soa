@@ -11,6 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
         currentUser: null,
         carrinho: null,
         products: [],
+        currentPedido: null // Armazena o pedido atual
     };
 
     const UI = {
@@ -28,6 +29,21 @@ document.addEventListener('DOMContentLoaded', () => {
         backToProducts: document.getElementById('back-to-products'),
         checkoutButton: document.getElementById('checkout-button'),
         checkoutMessage: document.getElementById('checkout-message'),
+        paymentMethodSelect: document.getElementById('payment-method-select'),
+        paymentSimulationArea: document.getElementById('payment-simulation-area'),
+        pixSimulation: document.getElementById('pix-simulation'),
+        cardSimulation: document.getElementById('card-simulation'),
+        boletoSimulation: document.getElementById('boleto-simulation'),
+        pixQRCode: document.getElementById('pix-qr-code'),
+        pixStatus: document.getElementById('pix-status'),
+        boletoBarcode: document.getElementById('boleto-barcode'),
+        processPaymentButton: document.getElementById('process-payment-button'),
+        paymentMessage: document.getElementById('payment-message'),
+        // Inputs do formulário de cartão
+        cardNomeInput: document.getElementById('card-nome'),
+        cardNumeroInput: document.getElementById('card-numero'),
+        cardValidadeInput: document.getElementById('card-validade'),
+        cardCvvInput: document.getElementById('card-cvv')
     };
 
     // =================================================================
@@ -238,6 +254,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             if (!pedidoResponse.ok) throw new Error('Não foi possível criar o pedido.');
             const novoPedido = await pedidoResponse.json();
+            state.currentPedido = novoPedido;
 
             switchView('payment', 'left');
             showPaymentOptions(novoPedido);
@@ -253,28 +270,68 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('payment-order-id').textContent = `#${pedido.id}`;
         document.getElementById('payment-order-total').textContent = `R$ ${pedido.total.toFixed(2)}`;
         
-        const processPaymentButton = document.getElementById('process-payment-button');
-        const newButton = processPaymentButton.cloneNode(true);
-        processPaymentButton.parentNode.replaceChild(newButton, processPaymentButton);
+        UI.paymentMessage.innerHTML = '';
+        UI.processPaymentButton.disabled = false;
         
-        newButton.addEventListener('click', () => handleProcessPayment(pedido.id));
+        updatePaymentSimulationView();
     }
 
-    async function handleProcessPayment(pedidoId) {
-        const paymentMessage = document.getElementById('payment-message');
-        const paymentButton = document.getElementById('process-payment-button');
-        const selectedMethod = document.getElementById('payment-method-select').value;
+    function updatePaymentSimulationView() {
+        const selectedMethod = UI.paymentMethodSelect.value;
+        const simulations = [UI.pixSimulation, UI.cardSimulation, UI.boletoSimulation];
+        simulations.forEach(sim => sim.classList.add('hidden'));
 
-        paymentButton.disabled = true;
-        paymentMessage.innerHTML = `<div class="status-info">Processando pagamento...</div>`;
+        if (selectedMethod === 'PIX') {
+            UI.pixSimulation.classList.remove('hidden');
+            const qrCodeData = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=Pedido:${state.currentPedido.id}-Valor:${state.currentPedido.total}`;
+            UI.pixQRCode.src = qrCodeData;
+            UI.pixStatus.classList.add('hidden');
+        } else if (selectedMethod === 'Cartão de Crédito') {
+            UI.cardSimulation.classList.remove('hidden');
+        } else if (selectedMethod === 'Boleto') {
+            UI.boletoSimulation.classList.remove('hidden');
+            const randomBarcode = Array.from({length: 44}, () => Math.floor(Math.random() * 10)).join('');
+            UI.boletoBarcode.textContent = randomBarcode.replace(/(\d{5})(\d{5})(\d{5})(\d{6})(\d{5})(\d{6})(\d{1})(\d{14})/, '$1.$2 $3.$4 $5.$6 $7 $8');
+        }
+    }
 
+    async function handleProcessPayment() {
+        const pedidoId = state.currentPedido.id;
+        const selectedMethod = UI.paymentMethodSelect.value;
+
+        UI.processPaymentButton.disabled = true;
+        UI.paymentMessage.innerHTML = `<div class="status-info">Processando simulação...</div>`;
+        
+        if (selectedMethod === 'PIX') {
+            UI.pixStatus.textContent = 'Aguardando pagamento...';
+            UI.pixStatus.classList.remove('hidden');
+            setTimeout(() => {
+                UI.pixStatus.textContent = 'Pagamento detectado! Processando...';
+                setTimeout(() => {
+                    confirmPayment(pedidoId, selectedMethod);
+                }, 1500);
+            }, 3000);
+        } else if (selectedMethod === 'Cartão de Crédito') {
+            if (!UI.cardNomeInput.value || !UI.cardNumeroInput.value || !UI.cardValidadeInput.value || !UI.cardCvvInput.value) {
+                UI.paymentMessage.innerHTML = `<div class="status-error">Preencha todos os dados do cartão.</div>`;
+                UI.processPaymentButton.disabled = false;
+                return;
+            }
+            setTimeout(() => confirmPayment(pedidoId, selectedMethod), 1000);
+        } else {
+            setTimeout(() => confirmPayment(pedidoId, selectedMethod), 1000);
+        }
+    }
+
+    async function confirmPayment(pedidoId, metodo) {
+        UI.paymentMessage.innerHTML = `<div class="status-info">Confirmando pagamento com a operadora...</div>`;
         try {
             const pagamentoResponse = await fetch(`${API_URL}/pagamentos`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     pedido_id: pedidoId,
-                    metodo: selectedMethod
+                    metodo: metodo
                 })
             });
 
@@ -283,7 +340,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 throw new Error(errorData.message || 'O pagamento falhou.');
             }
 
-            paymentMessage.innerHTML = `
+            UI.paymentMessage.innerHTML = `
                 <div class="status-success">
                     <strong>Pagamento aprovado!</strong><br>
                     Obrigado por comprar na QualityStore! Em breve você voltará para a loja.
@@ -296,8 +353,8 @@ document.addEventListener('DOMContentLoaded', () => {
             }, 3000);
 
         } catch (error) {
-            paymentMessage.innerHTML = `<div class="status-error">Houve um erro: ${error.message}</div>`;
-            paymentButton.disabled = false;
+            UI.paymentMessage.innerHTML = `<div class="status-error">Houve um erro: ${error.message}</div>`;
+            UI.processPaymentButton.disabled = false;
         }
     }
 
@@ -319,10 +376,9 @@ document.addEventListener('DOMContentLoaded', () => {
             currentActiveView.classList.add(exitClass);
             currentActiveView.classList.remove('active');
             
-            // Limpa a classe de saída após a animação para poder reverter
             setTimeout(() => {
                 currentActiveView.classList.remove(exitClass);
-            }, 400); // Duração da animação
+            }, 400); 
         }
 
         targetView.classList.add('active');
@@ -345,7 +401,44 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // =================================================================
-    //  4. EVENT LISTENERS
+    //  4. NOVAS FUNÇÕES DE FORMATAÇÃO DE CARTÃO
+    // =================================================================
+
+    const formatCardNumber = (event) => {
+        const input = event.target;
+        let value = input.value.replace(/\D/g, ''); // Remove tudo que não for dígito
+        value = value.substring(0, 16); // Limita a 16 dígitos
+        
+        // Adiciona um espaço a cada 4 dígitos
+        const groups = value.match(/.{1,4}/g);
+        if (groups) {
+            input.value = groups.join(' ');
+        } else {
+            input.value = '';
+        }
+    };
+
+    const formatCardExpiry = (event) => {
+        const input = event.target;
+        let value = input.value.replace(/\D/g, ''); // Remove tudo que não for dígito
+        value = value.substring(0, 4); // Limita a 4 dígitos (MMAA)
+
+        if (value.length > 2) {
+            input.value = `${value.substring(0, 2)}/${value.substring(2)}`;
+        } else {
+            input.value = value;
+        }
+    };
+
+    const formatCardCVV = (event) => {
+        const input = event.target;
+        let value = input.value.replace(/\D/g, ''); // Remove tudo que não for dígito
+        input.value = value.substring(0, 4); // Limita a 4 dígitos
+    };
+
+
+    // =================================================================
+    //  5. EVENT LISTENERS
     // =================================================================
     const setupEventListeners = () => {
         document.body.addEventListener('click', (event) => {
@@ -374,16 +467,23 @@ document.addEventListener('DOMContentLoaded', () => {
         UI.backToProducts.addEventListener('click', (e) => {
             e.preventDefault();
             const currentActive = document.querySelector('.view.active').id;
-            // Se estiver no pagamento, volta pro carrinho. Se estiver no carrinho, volta pros produtos.
             const targetView = currentActive === 'payment-view' ? 'cart' : 'products';
             switchView(targetView, 'right');
         });
         
         UI.checkoutButton.addEventListener('click', handleCheckout);
+
+        UI.paymentMethodSelect.addEventListener('change', updatePaymentSimulationView);
+        UI.processPaymentButton.addEventListener('click', handleProcessPayment);
+
+        // NOVO: Adiciona os listeners para os campos do cartão
+        UI.cardNumeroInput.addEventListener('input', formatCardNumber);
+        UI.cardValidadeInput.addEventListener('input', formatCardExpiry);
+        UI.cardCvvInput.addEventListener('input', formatCardCVV);
     };
 
     // =================================================================
-    //  5. INICIALIZAÇÃO DA APLICAÇÃO
+    //  6. INICIALIZAÇÃO DA APLICAÇÃO
     // =================================================================
     
     const init = async () => {

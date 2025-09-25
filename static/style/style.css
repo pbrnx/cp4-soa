@@ -819,3 +819,64 @@ body {
     z-index: 0;
 }
 
+/* Adicionar ao final de static/style/style.css */
+
+/* =============================================== */
+/* 11. ESTILOS DE SIMULAÇÃO DE PAGAMENTO           */
+/* =============================================== */
+#payment-simulation-area {
+    margin-top: 1.5rem;
+    padding: 1.5rem;
+    background-color: var(--color-background);
+    border-radius: var(--border-radius-medium);
+}
+
+.payment-simulation-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+.payment-simulation-content p {
+    text-align: center;
+    color: var(--color-text-body);
+    font-size: 1rem;
+    margin-top: 0;
+}
+
+.card-simulation label {
+    margin: 30px;
+}
+
+/* Estilos para o formulário de Cartão */
+.form-group-inline {
+    display: flex;
+    gap: 2rem;
+}
+.form-group-inline .form-group {
+    flex: 1;
+}
+
+/* Estilos para o Boleto */
+.barcode-text {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 1.1rem;
+    letter-spacing: 2px;
+    padding: 1.5rem;
+    border: 2px dashed var(--color-border);
+    background-color: white;
+    margin: 1rem 0;
+    width: 100%;
+    word-break: break-all;
+}
+.small-text {
+    font-size: 0.8rem;
+    color: #888;
+}
+
+/* Status do PIX */
+#pix-status {
+    font-weight: 600;
+    margin-top: 1rem;
+}

@@ -69,7 +69,7 @@
                         <p>Pedido <strong id="payment-order-id">#000</strong> - Total: <strong id="payment-order-total">R$ 0,00</strong></p>
                         
                         <div class="payment-methods">
-                            <p>Escolha o método de pagamento:</p>
+                            <label for="payment-method-select">Escolha o método de pagamento:</label>
                             <select id="payment-method-select" class="form-input">
                                 <option value="PIX">PIX</option>
                                 <option value="Cartão de Crédito">Cartão de Crédito</option>
@@ -77,6 +77,29 @@
                             </select>
                         </div>
     
+                        <div id="payment-simulation-area">
+                            <div id="pix-simulation" class="payment-simulation-content">
+                                <p>Escaneie o QR Code para pagar com PIX:</p>
+                                <img id="pix-qr-code" src="" alt="QR Code PIX" style="width: 200px; height: 200px; margin: 1rem auto; display: block;">
+                                <div id="pix-status" class="status-info hidden">Aguardando pagamento...</div>
+                            </div>
+                            
+                            <div id="card-simulation" class="payment-simulation-content hidden">
+                                <div class="form-group"><label for="card-nome">Nome no Cartão</label><input type="text" id="card-nome" class="form-input" placeholder="Nome Completo"></div>
+                                <div class="form-group"><label for="card-numero" maxlength="16">Número do Cartão</label><input type="text" id="card-numero" class="form-input" placeholder="0000 0000 0000 0000"></div>
+                                <div class="form-group-inline">
+                                    <div class="form-group"><label for="card-validade">Validade</label><input type="text" id="card-validade" class="form-input" placeholder="MM/AA"></div>
+                                    <div class="form-group"><label for="card-cvv">CVV</label><input type="text" id="card-cvv" class="form-input" placeholder="123"></div>
+                                </div>
+                            </div>
+
+                            <div id="boleto-simulation" class="payment-simulation-content hidden">
+                                <p>Código de Barras para pagamento:</p>
+                                <div id="boleto-barcode" class="barcode-text"></div>
+                                <p class="small-text">Este é um boleto fictício apenas para simulação.</p>
+                            </div>
+                        </div>
+
                         <button id="process-payment-button" class="checkout-btn">Pagar Agora</button>
                         <div id="payment-message" class="checkout-status"></div>
                     </div>
