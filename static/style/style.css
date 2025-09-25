@@ -3,6 +3,9 @@
 /* =============================================== */
 /* 1. FUNDAMENTOS E RESET                          */
 /* =============================================== */
+
+
+
 :root {
     --color-background: #f5f5f7;
     --color-surface: #ffffff;
@@ -718,3 +721,101 @@ body {
 .btn-quantity:hover {
     background-color: #e8e8ed;
 }
+
+/* =============================================== */
+/* 9. ESTILOS DA TELA DE PAGAMENTO (NOVO)          */
+/* =============================================== */
+
+/* Contêiner principal para a visualização de pagamento */
+#payment-view {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding-top: 2rem;
+}
+
+/* Cartão que agrupa as opções de pagamento */
+.payment-card {
+    background-color: var(--color-surface);
+    width: 100%;
+    max-width: 650px; /* Define uma largura máxima para não ficar muito largo */
+    padding: 2.5rem;
+    border-radius: var(--border-radius-large);
+    box-shadow: var(--shadow-medium);
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem; /* Espaçamento entre os elementos internos */
+}
+
+.payment-card h2 {
+    font-size: 1.8rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    text-align: center;
+}
+
+.payment-card p {
+    text-align: center;
+    color: var(--color-text-body);
+    font-size: 1rem;
+    margin-top: -1rem;
+}
+
+.payment-methods {
+    border-top: 1px solid var(--color-border);
+    padding-top: 1.5rem;
+}
+
+.payment-methods p {
+    text-align: left;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+}
+
+/* =============================================== */
+/* 10. ANIMAÇÃO DE TRANSIÇÃO DE TELA (VERSÃO FINAL) */
+/* =============================================== */
+
+/* O contêiner agora age como um "palco" para as telas */
+.view-container {
+    position: relative;
+    min-height: 60vh; /* Garante que o contêiner não colapse */
+    overflow: hidden; /* Essencial para esconder as telas que deslizam para fora */
+}
+
+/* Todas as telas são posicionadas absolutamente, empilhadas umas sobre as outras */
+.view {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    opacity: 0; /* Começam invisíveis */
+    transform: translateX(50px); /* Começam levemente à direita */
+    transition: transform 0.4s ease, opacity 0.4s ease;
+    pointer-events: none; /* Não podem ser clicadas quando invisíveis */
+}
+
+/* A tela ativa fica visível e centralizada */
+.view.active {
+    opacity: 1;
+    transform: translateX(0);
+    pointer-events: auto; /* Pode ser clicada */
+    z-index: 1; /* Garante que fique na frente */
+    position: relative;
+}
+
+/* A tela que está saindo desliza para a esquerda e some */
+.view.exiting-left {
+    opacity: 0;
+    transform: translateX(-50px);
+    z-index: 0;
+}
+
+/* A tela que está saindo (ao voltar) desliza para a direita e some */
+.view.exiting-right {
+    opacity: 0;
+    transform: translateX(50px);
+    z-index: 0;
+}
+

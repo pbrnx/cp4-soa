@@ -1,4 +1,5 @@
-// src/repositories/carrinho.repositories.js
+// ARQUIVO ATUALIZADO: src/repositories/carrinho.repositories.js
+
 const oracledb = require('oracledb');
 const { execute } = require('../config/database');
 const { Carrinho, ItemCarrinho } = require('../models/carrinho.model');
@@ -27,14 +28,12 @@ const getItensByCarrinhoId = async (carrinho_id) => {
     return result.rows.map(row => new ItemCarrinho(row.ID, row.PRODUTO_ID, row.NOME_PRODUTO, row.QUANTIDADE, row.PRECO_UNITARIO));
 };
 
-// **NOVA FUNÇÃO ADICIONADA**
 const findItemByCarrinhoAndProduto = async (carrinho_id, produto_id) => {
     const sql = `SELECT id, quantidade FROM item_carrinho WHERE carrinho_id = :carrinho_id AND produto_id = :produto_id`;
     const result = await execute(sql, [parseInt(carrinho_id, 10), parseInt(produto_id, 10)]);
     return result.rows.length > 0 ? result.rows[0] : null;
 };
 
-// **NOVA FUNÇÃO ADICIONADA**
 const updateItemQuantidade = async (item_id, nova_quantidade) => {
     const sql = `UPDATE item_carrinho SET quantidade = :quantidade WHERE id = :id`;
     await execute(sql, [nova_quantidade, parseInt(item_id, 10)], { autoCommit: true });
@@ -74,6 +73,13 @@ const findCarrinhoById = async (carrinhoId) => {
     return { id: row.ID, cliente_id: row.CLIENTE_ID };
 };
 
+
+const clearCarrinhoById = async (carrinho_id) => {
+    const sql = `DELETE FROM item_carrinho WHERE carrinho_id = :carrinho_id`;
+    await execute(sql, [parseInt(carrinho_id, 10)], { autoCommit: true });
+};
+
+
 module.exports = {
     findCarrinhoByClienteId,
     createCarrinho,
@@ -83,5 +89,6 @@ module.exports = {
     insertItemNoCarrinho,       
     removeItemDoCarrinho,
     findItemById,
-    findCarrinhoById
+    findCarrinhoById,
+    clearCarrinhoById 
 };

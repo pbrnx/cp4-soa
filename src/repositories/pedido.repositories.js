@@ -1,4 +1,5 @@
-// src/repositories/pedido.repositories.js
+//src/repositories/pedido.repositories.js
+
 const oracledb = require('oracledb');
 // Importe ambas as funções do nosso módulo de banco de dados
 const { execute, executeTransaction } = require('../config/database');
@@ -24,9 +25,9 @@ const createPedidoFromCarrinho = async (carrinho) => {
         const itensPedidoBinds = carrinho.itens.map(item => [pedido_id, item.produto_id, item.quantidade, item.preco_unitario]);
         await connection.executeMany(createItemPedidoSql, itensPedidoBinds);
 
-        // 3. Limpar o carrinho
-        const deleteItensCarrinhoSql = `DELETE FROM item_carrinho WHERE carrinho_id = :carrinho_id`;
-        await connection.execute(deleteItensCarrinhoSql, [carrinho.id]);
+        // 3. Limpar o carrinho (REMOVIDO)
+        // const deleteItensCarrinhoSql = `DELETE FROM item_carrinho WHERE carrinho_id = :carrinho_id`;
+        // await connection.execute(deleteItensCarrinhoSql, [carrinho.id]);
 
         const novoPedido = new Pedido(pedido_id, carrinho.cliente_id, total, 'CRIADO');
         carrinho.itens.forEach(item => novoPedido.adicionarItem(new ItemPedido(null, item.produto_id, item.quantidade, item.preco_unitario)));

@@ -21,6 +21,7 @@ document.addEventListener('DOMContentLoaded', () => {
         userSessionContainer: document.getElementById('user-session'),
         productsView: document.getElementById('products-view'),
         cartView: document.getElementById('cart-view'),
+        paymentView: document.getElementById('payment-view'),
         cartItemsContainer: document.getElementById('cart-items-container'),
         cartTotal: document.getElementById('cart-total'),
         pageTitle: document.getElementById('page-title'),
@@ -196,7 +197,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         try {
-            // Se a quantidade for 0 ou menos, removemos o item. Caso contrário, atualizamos.
             if (novaQuantidade <= 0) {
                 await fetch(`${API_URL}/carrinhos/items/${itemId}`, { method: 'DELETE' });
             } else {
@@ -220,7 +220,7 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error('Falha ao remover item:', error);
         }
     };
-
+    
     const handleCheckout = async () => {
         if (!state.carrinho || state.carrinho.itens.length === 0) {
             alert("Seu carrinho está vazio!");
@@ -239,22 +239,9 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!pedidoResponse.ok) throw new Error('Não foi possível criar o pedido.');
             const novoPedido = await pedidoResponse.json();
 
-            const pagamentoResponse = await fetch(`${API_URL}/pagamentos`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    pedido_id: novoPedido.id,
-                    metodo: "Cartão de Crédito"
-                })
-            });
-            if (!pagamentoResponse.ok) throw new Error('O pagamento falhou.');
+            switchView('payment', 'left');
+            showPaymentOptions(novoPedido);
 
-            UI.checkoutMessage.innerHTML = `
-                <div class="status-success">
-                    <strong>Pedido #${novoPedido.id} realizado com sucesso!</strong><br>
-                    O pagamento foi aprovado. Obrigado por comprar na QualityStore!
-                </div>`;
-            await fetchCart();
         } catch (error) {
             console.error("Erro no checkout:", error);
             UI.checkoutMessage.innerHTML = `<div class="status-error">Houve um erro: ${error.message}</div>`;
@@ -262,19 +249,91 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    const switchView = (viewName) => {
-        UI.productsView.classList.add('hidden');
-        UI.cartView.classList.add('hidden');
-        UI.backToProducts.classList.add('hidden');
+    function showPaymentOptions(pedido) {
+        document.getElementById('payment-order-id').textContent = `#${pedido.id}`;
+        document.getElementById('payment-order-total').textContent = `R$ ${pedido.total.toFixed(2)}`;
+        
+        const processPaymentButton = document.getElementById('process-payment-button');
+        const newButton = processPaymentButton.cloneNode(true);
+        processPaymentButton.parentNode.replaceChild(newButton, processPaymentButton);
+        
+        newButton.addEventListener('click', () => handleProcessPayment(pedido.id));
+    }
+
+    async function handleProcessPayment(pedidoId) {
+        const paymentMessage = document.getElementById('payment-message');
+        const paymentButton = document.getElementById('process-payment-button');
+        const selectedMethod = document.getElementById('payment-method-select').value;
+
+        paymentButton.disabled = true;
+        paymentMessage.innerHTML = `<div class="status-info">Processando pagamento...</div>`;
+
+        try {
+            const pagamentoResponse = await fetch(`${API_URL}/pagamentos`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    pedido_id: pedidoId,
+                    metodo: selectedMethod
+                })
+            });
+
+            if (!pagamentoResponse.ok) {
+                const errorData = await pagamentoResponse.json();
+                throw new Error(errorData.message || 'O pagamento falhou.');
+            }
+
+            paymentMessage.innerHTML = `
+                <div class="status-success">
+                    <strong>Pagamento aprovado!</strong><br>
+                    Obrigado por comprar na QualityStore! Em breve você voltará para a loja.
+                </div>`;
+            
+            await fetchCart();
+
+            setTimeout(() => {
+                switchView('products', 'right');
+            }, 3000);
+
+        } catch (error) {
+            paymentMessage.innerHTML = `<div class="status-error">Houve um erro: ${error.message}</div>`;
+            paymentButton.disabled = false;
+        }
+    }
+
+    const switchView = (viewName, direction = 'left') => {
+        const views = {
+            products: UI.productsView,
+            cart: UI.cartView,
+            payment: UI.paymentView
+        };
+
+        const targetView = views[viewName];
+        if (!targetView) return;
+
+        const currentActiveView = document.querySelector('.view.active');
+        if (currentActiveView === targetView) return;
+
+        if (currentActiveView) {
+            const exitClass = direction === 'left' ? 'exiting-left' : 'exiting-right';
+            currentActiveView.classList.add(exitClass);
+            currentActiveView.classList.remove('active');
+            
+            // Limpa a classe de saída após a animação para poder reverter
+            setTimeout(() => {
+                currentActiveView.classList.remove(exitClass);
+            }, 400); // Duração da animação
+        }
+
+        targetView.classList.add('active');
+        targetView.classList.remove('exiting-left', 'exiting-right');
 
         if (viewName === 'products') {
-            UI.productsView.classList.remove('hidden');
             UI.pageTitle.textContent = 'Nossos Produtos';
-        } else if (viewName === 'cart') {
-            UI.cartView.classList.remove('hidden');
-            UI.pageTitle.textContent = 'Seu Carrinho';
+            UI.backToProducts.classList.add('hidden');
+        } else {
+            UI.pageTitle.textContent = viewName === 'cart' ? 'Seu Carrinho' : 'Finalizar Pagamento';
             UI.backToProducts.classList.remove('hidden');
-            UI.checkoutMessage.innerHTML = '';
         }
     };
 
@@ -309,12 +368,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 window.location.href = 'login.html';
                 return;
             }
-            switchView('cart');
+            switchView('cart', 'left');
         });
 
         UI.backToProducts.addEventListener('click', (e) => {
             e.preventDefault();
-            switchView('products');
+            const currentActive = document.querySelector('.view.active').id;
+            // Se estiver no pagamento, volta pro carrinho. Se estiver no carrinho, volta pros produtos.
+            const targetView = currentActive === 'payment-view' ? 'cart' : 'products';
+            switchView(targetView, 'right');
         });
         
         UI.checkoutButton.addEventListener('click', handleCheckout);
