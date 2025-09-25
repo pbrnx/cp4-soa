@@ -315,6 +315,35 @@ paths:
           description: Carrinho ou produto não encontrado
 
   /carrinhos/items/{itemId}:
+    put:
+      tags:
+        - Carrinhos
+      summary: Atualiza a quantidade de um item no carrinho
+      parameters:
+        - name: itemId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                quantidade:
+                  type: integer
+                  example: 3
+              required:
+                - quantidade
+      responses:
+        '204':
+          description: Quantidade do item atualizada com sucesso
+        '400':
+          description: Quantidade inválida
+        '404':
+          description: Item não encontrado no carrinho
     delete:
       tags:
         - Carrinhos
@@ -410,7 +439,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Pagamento'
         '400':
-          description: Pedido inválido ou já pago
+          description: Pedido inválido, já pago ou método de pagamento incorreto
 
   /pagamentos/pedido/{pedidoId}:
     get:
@@ -649,6 +678,10 @@ components:
         metodo:
           type: string
           example: "Cartão de Crédito"
+          enum:
+            - PIX
+            - Cartão de Crédito
+            - Boleto
       required:
         - pedido_id
         - metodo

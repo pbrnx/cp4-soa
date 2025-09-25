@@ -7,7 +7,7 @@ const carrinhoRepository = require('../repositories/carrinho.repositories'); // 
 const createPagamento = async (pagamentoData) => {
     // Validações de método de pagamento e do pedido (permanecem iguais)
     const metodosPermitidos = ['PIX', 'Cartão de Crédito', 'Boleto'];
-    if (!pagamentoData.metodo || !metodosPermitidos.includes(pagamentoData.metodo.toUpperCase())) {
+    if (!pagamentoData.metodo || !metodosPermitidos.includes(pagamentoData.metodo)) {
         throw new Error(`Método de pagamento inválido. Os métodos aceitos são: ${metodosPermitidos.join(', ')}.`);
     }
 
